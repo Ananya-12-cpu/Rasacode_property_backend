@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { PropertyModule } from './property/property.module';
 
 @Module({
   imports: [
@@ -22,9 +23,9 @@ import { DataSource } from 'typeorm';
         trustServerCertificate: true,
       },
       // synchronize: true,
-      // Migration settings (place your migration files in src/migrations during
-      // development and dist/migrations after build):
-      migrations: ['dist/migrations/*{.js,.ts}', 'src/migrations/*{.js,.ts}'],
+      // Migration settings: when running via ts-node use TS migrations in src.
+      // After build switch this to dist/migrations/*.js to avoid duplicates.
+      migrations: ['src/migrations/*{.ts}'],
       // optional
       migrationsRun: false,
       migrationsTableName: 'migrations',
@@ -34,6 +35,7 @@ import { DataSource } from 'typeorm';
     LoginModule,
     RegisterModule,
     UsersModule,
+    PropertyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

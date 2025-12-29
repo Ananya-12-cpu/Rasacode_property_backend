@@ -12,9 +12,11 @@ export default new DataSource({
     trustServerCertificate: true,
   },
   synchronize: false,
-  // Migration settings (place your migration files in src/migrations during
-  // development and dist/migrations after build):
-  migrations: ['dist/migrations/*{.js,.ts}', 'src/migrations/*{.js,.ts}'],
+  // Migration settings: when running via ts-node use the TS files in src,
+  // after build use the JS files in dist. Use a single pattern for ts-node
+  // to avoid loading duplicate .js/.ts variants which causes duplicate
+  // migration errors.
+  migrations: ['src/migrations/*{.ts}'],
   entities: [
     // 'dist/**/*.entity{.ts,.js}',
     'src/entities/*.entity{.ts,.js}',
