@@ -10,7 +10,7 @@ import {
 
 import { Role } from './role.entity';
 
-@Entity()
+@Entity({ schema: 'dbo' })
 export class User {
   @PrimaryGeneratedColumn()
   id: number;

@@ -20,7 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "typeorm-ts-node-commonjs",
     "schema:sync": "npx typeorm-ts-node-commonjs schema:sync",
-    "typeorm:cache": "npx typeorm-ts-node-commonjs cache:clear",
+    "typeorm:cache": "npx typeorm-ts-node-commonjs cache:clear -d ./src/database/data-source.ts",
     "schema:drop": "npx typeorm-ts-node-commonjs -d ./src/database/data-source.ts",
     "migration:create": "typeorm migration:create ./src/migrations/schema-update",
     "migration:generate": "npx typeorm-ts-node-commonjs migration:generate ./src/migrations/schema-update -d ./src/database/data-source.ts",

@@ -16,7 +16,10 @@ export default new DataSource({
   // after build use the JS files in dist. Use a single pattern for ts-node
   // to avoid loading duplicate .js/.ts variants which causes duplicate
   // migration errors.
-  migrations: ['src/migrations/*{.ts}'],
+  migrations: [
+    // 'dist/migrations/*{.js,.ts}',
+    'src/migrations/*{.js,.ts}',
+  ],
   entities: [
     // 'dist/**/*.entity{.ts,.js}',
     'src/entities/*.entity{.ts,.js}',

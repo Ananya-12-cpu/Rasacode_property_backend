@@ -7,7 +7,7 @@ import {
   Unique,
 } from 'typeorm';
 
-@Entity('properties')
+@Entity({ schema: 'dbo', name: 'properties' })
 @Unique('UQ_property_address', [
   'street_address',
   'unit_apt',
