@@ -3,11 +3,16 @@
 // @Injectable()
 // export class PropertyService {}
 
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Property } from '././../entities/property.entity';
 import { CreatePropertyDto } from './dtos/property.request.dto';
+import { UpdatePropertyDto } from './dtos/property.update.dto';
 
 @Injectable()
 export class PropertyService {
@@ -16,10 +21,6 @@ export class PropertyService {
     private readonly propertyRepository: Repository<Property>,
   ) {}
 
-  // create(data: CreatePropertyDto) {
-  //   const property = this.propertyRepository.create(data);
-  //   return this.propertyRepository.save(property);
-  // }
   async create(dto: CreatePropertyDto): Promise<Property> {
     const exists = await this.propertyRepository.findOne({
       where: {
@@ -44,8 +45,34 @@ export class PropertyService {
     return this.propertyRepository.find();
   }
 
-  findOne(id: number) {
-    return this.propertyRepository.findOne({ where: { id } });
+  async findOne(id: number): Promise<Property> {
+    const property = await this.propertyRepository.findOne({
+      where: { id },
+    });
+
+    if (!property) {
+      throw new NotFoundException(`Property with id ${id} not found`);
+    }
+
+    return property;
+  }
+
+  // findOne(id: number) {
+  //   return this.propertyRepository.findOne({ where: { id } });
+  // }
+
+  async update(id: number, dto: UpdatePropertyDto): Promise<Property> {
+    const property = await this.propertyRepository.findOne({
+      where: { id },
+    });
+
+    if (!property) {
+      throw new NotFoundException(`Property with id ${id} not found`);
+    }
+
+    Object.assign(property, dto);
+
+    return this.propertyRepository.save(property);
   }
 
   async remove(id: number) {
