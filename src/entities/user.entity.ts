@@ -6,11 +6,13 @@ import {
   JoinTable,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 import { Role } from './role.entity';
+import { UserPropertyLike } from './user-property-likes.entity';
 
-@Entity({ schema: 'dbo' })
+@Entity({ schema: 'dbo', name: 'Users' })
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -20,6 +22,9 @@ export class User {
 
   @Column()
   passwordHash: string;
+
+  @OneToMany(() => UserPropertyLike, (like) => like.user)
+  likedProperties: UserPropertyLike[];
 
   @Column({ nullable: true })
   first_name: string;

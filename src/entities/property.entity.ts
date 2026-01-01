@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Unique,
+  OneToMany,
 } from 'typeorm';
+import { UserPropertyLike } from './user-property-likes.entity';
 
-@Entity({ schema: 'dbo', name: 'properties' })
-@Unique('UQ_property_address', [
+@Entity({ schema: 'dbo', name: 'RealEstateProperties', database: 'EliteDB' })
+@Unique('UQ_realestateproperty_address', [
   'street_address',
   'unit_apt',
   'city',
@@ -127,6 +129,9 @@ export class Property {
   // Images (stored as array of URLs)
   @Column({ type: 'simple-array', nullable: true })
   images: string[];
+
+  @OneToMany(() => UserPropertyLike, (like) => like.property)
+  likedByUsers: UserPropertyLike[];
 
   @CreateDateColumn()
   created_at: Date;

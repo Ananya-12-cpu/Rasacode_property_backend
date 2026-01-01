@@ -1,12 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { DataSource } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+
+// This instance loads .env files from the root by default
+const configService = new ConfigService();
 
 export default new DataSource({
   type: 'mssql',
-  host: 'localhost',
-  port: 1433,
-  username: 'ananyalogin',
-  password: '123',
-  database: 'EliteDB',
+  schema: 'dbo',
+  host: configService.get<string>('DB_HOST') || 'localhost',
+  port: configService.get<number>('DB_PORT') || 1433,
+  username: configService.get<string>('DB_USER') || 'ananyalogin',
+  password: configService.get<string>('DB_PASSWORD') || '123',
+  database: configService.get<string>('DB_NAME') || 'EliteDB',
   //   autoLoadEntities: true,
   options: {
     trustServerCertificate: true,
