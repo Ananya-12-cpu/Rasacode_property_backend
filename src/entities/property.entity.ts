@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { UserPropertyLike } from './user-property-likes.entity';
 
-@Entity({ schema: 'dbo', name: 'RealEstateProperties', database: 'EliteDB' })
+@Entity({ schema: 'dbo', name: 'RealEstateProperties' })
 @Unique('UQ_realestateproperty_address', [
   'street_address',
   'unit_apt',
