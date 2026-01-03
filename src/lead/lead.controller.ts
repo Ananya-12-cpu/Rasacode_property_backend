@@ -32,17 +32,6 @@ export class LeadController {
     };
   }
 
-  // async getLeads(@Query('userId') userId) {
-  //   // const userId = req.user.id; // from JWT
-  //   const data = await this.leadService.getLeadProperties(userId);
-
-  //   return {
-  //     is_success: true,
-  //     message: 'Lead properties fetched successfully',
-  //     data,
-  //   };
-  // }
-
   @Post('like/:propertyId')
   @ApiOperation({ summary: 'Like or unlike a property for a user' })
   @ApiQuery({ name: 'userId', required: false, type: Number })
