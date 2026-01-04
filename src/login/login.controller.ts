@@ -5,11 +5,11 @@ import { LoginDataDto } from './dtos/login.response.dto';
 import { GenericResponseDto } from '../login/dtos/generic-response.dto';
 import { plainToInstance } from 'class-transformer';
 
-@Controller('login')
+@Controller('auth')
 export class LoginController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
+  @Post('login')
   async login(
     @Body() body: LoginRequestDto,
   ): Promise<GenericResponseDto<LoginDataDto>> {
