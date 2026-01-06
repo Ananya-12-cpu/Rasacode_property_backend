@@ -8,191 +8,158 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePropertyDto {
   // Listing info
-  @ApiPropertyOptional({ example: '2025-01-01' })
-  @IsOptional()
+  @ApiProperty({ example: '2025-01-01' })
   @IsDateString()
-  listing_date?: string;
+  listing_date: string;
 
-  @ApiPropertyOptional({ example: 450000 })
-  @IsOptional()
+  @ApiProperty({ example: 450000 })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  listing_price?: number;
+  listing_price: number;
 
-  @ApiPropertyOptional({ example: 470000 })
-  @IsOptional()
+  @ApiProperty({ example: 470000 })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  asking_price?: number;
+  asking_price: number;
 
   // Address
-  @ApiPropertyOptional({ example: '123 Main Street' })
-  @IsOptional()
+  @ApiProperty({ example: '123 Main Street' })
   @IsString()
-  street_address?: string;
+  street_address: string;
 
-  @ApiPropertyOptional({ example: 'Apt 402' })
-  @IsOptional()
+  @ApiProperty({ example: 'Apt 402' })
   @IsString()
-  unit_apt?: string;
+  unit_apt: string;
 
-  @ApiPropertyOptional({ example: 'Mumbai' })
-  @IsOptional()
+  @ApiProperty({ example: 'Mumbai' })
   @IsString()
-  city?: string;
+  city: string;
 
-  @ApiPropertyOptional({ example: 'Maharashtra' })
-  @IsOptional()
+  @ApiProperty({ example: 'Maharashtra' })
   @IsString()
-  state?: string;
+  state: string;
 
-  @ApiPropertyOptional({ example: '400001' })
-  @IsOptional()
+  @ApiProperty({ example: '400001' })
   @IsString()
-  zip_code?: string;
+  zip_code: string;
 
-  @ApiPropertyOptional({ example: 'Mumbai Suburban' })
-  @IsOptional()
+  @ApiProperty({ example: 'Mumbai Suburban' })
   @IsString()
-  county?: string;
+  county: string;
 
   // Property details
-  @ApiPropertyOptional({ example: 'Residential' })
-  @IsOptional()
+  @ApiProperty({ example: 'Residential' })
   @IsString()
-  property_type?: string;
+  property_type: string;
 
-  @ApiPropertyOptional({ example: 3 })
-  @IsOptional()
+  @ApiProperty({ example: 3 })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  bedrooms?: number;
+  bedrooms: number;
 
-  @ApiPropertyOptional({ example: 2 })
-  @IsOptional()
+  @ApiProperty({ example: 2 })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  bathrooms?: number;
+  bathrooms: number;
 
-  @ApiPropertyOptional({ example: 1200 })
-  @IsOptional()
+  @ApiProperty({ example: 1200 })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  square_feet?: number;
+  square_feet: number;
 
-  @ApiPropertyOptional({ example: '2000 sq ft' })
-  @IsOptional()
+  @ApiProperty({ example: '2000 sq ft' })
   @IsString()
-  lot_size?: string;
+  lot_size: string;
 
-  @ApiPropertyOptional({ example: 2015 })
-  @IsOptional()
+  @ApiProperty({ example: 2015 })
   @Type(() => Number)
   @IsNumber()
-  year_built?: number;
+  year_built: number;
 
-  @ApiPropertyOptional({ example: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  garage_spaces?: number;
-
-  @ApiPropertyOptional({ example: 2 })
-  @IsOptional()
+  @ApiProperty({ example: 1 })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  parking_spaces?: number;
+  garage_spaces: number;
+
+  @ApiProperty({ example: 2 })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  parking_spaces: number;
 
   // Property condition
-  @ApiPropertyOptional({ example: '5 years' })
-  @IsOptional()
+  @ApiProperty({ example: '5 years' })
   @IsString()
-  roof_age?: string;
+  roof_age: string;
 
-  @ApiPropertyOptional({ example: 'Good' })
-  @IsOptional()
+  @ApiProperty({ example: 'Good' })
   @IsString()
-  roof_status?: string;
+  roof_status: string;
 
-  @ApiPropertyOptional({ example: 'Excellent' })
-  @IsOptional()
+  @ApiProperty({ example: 'Excellent' })
   @IsString()
-  interior_condition?: string;
+  interior_condition: string;
 
-  @ApiPropertyOptional({ example: false })
-  @IsOptional()
+  @ApiProperty({ example: false })
   @IsBoolean()
-  exterior_paint_required?: boolean;
+  exterior_paint_required: boolean;
 
-  @ApiPropertyOptional({ example: false })
-  @IsOptional()
+  @ApiProperty({ example: false })
   @IsBoolean()
-  new_floor_required?: boolean;
+  new_floor_required: boolean;
 
-  @ApiPropertyOptional({ example: true })
-  @IsOptional()
+  @ApiProperty({ example: true })
   @IsBoolean()
-  kitchen_renovation_required?: boolean;
+  kitchen_renovation_required: boolean;
 
-  @ApiPropertyOptional({ example: false })
-  @IsOptional()
+  @ApiProperty({ example: false })
   @IsBoolean()
-  bathroom_renovation_required?: boolean;
+  bathroom_renovation_required: boolean;
 
-  @ApiPropertyOptional({ example: false })
-  @IsOptional()
+  @ApiProperty({ example: false })
   @IsBoolean()
-  drywall_repair_required?: boolean;
+  drywall_repair_required: boolean;
 
-  @ApiPropertyOptional({ example: false })
-  @IsOptional()
+  @ApiProperty({ example: false })
   @IsBoolean()
-  interior_paint_required?: boolean;
+  interior_paint_required: boolean;
 
   // Financial
   @ApiPropertyOptional({ example: 600000 })
   @IsOptional()
+  arv: number;
+
+  @ApiProperty({ example: 80000 })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  arv?: number;
+  repair_estimate: number;
 
-  @ApiPropertyOptional({ example: 80000 })
-  @IsOptional()
+  @ApiProperty({ example: 15000 })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  repair_estimate?: number;
+  holding_costs: number;
 
-  @ApiPropertyOptional({ example: 15000 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  holding_costs?: number;
-
-  @ApiPropertyOptional({ example: 'Cash' })
-  @IsOptional()
+  @ApiProperty({ example: 'Cash' })
   @IsString()
-  transaction_type?: string;
+  transaction_type: string;
 
-  @ApiPropertyOptional({ example: 10000 })
-  @IsOptional()
+  @ApiProperty({ example: 10000 })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  assignment_fee?: number;
+  assignment_fee: number;
 
   // Notes
   @ApiPropertyOptional({ example: 'Great investment opportunity' })
@@ -206,12 +173,11 @@ export class CreatePropertyDto {
   seller_notes?: string;
 
   // Images
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: ['https://img1.jpg', 'https://img2.jpg'],
     isArray: true,
   })
-  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  images?: string[];
+  images: string[];
 }
