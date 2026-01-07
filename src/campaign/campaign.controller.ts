@@ -22,8 +22,8 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@ApiTags('Properties')
-@Controller('properties')
+@ApiTags('Campaign')
+@Controller('Campaign')
 export class CampaignController {
   constructor(
     private readonly CampaignService: CampaignService,
@@ -49,14 +49,14 @@ export class CampaignController {
 
   // GET ALL
   @Get()
-  @ApiOperation({ summary: 'Get all properties' })
+  @ApiOperation({ summary: 'Get all Campaign' })
   async findAll(): Promise<GenericResponseDto<Campaign[]>> {
-    const properties = await this.CampaignService.findAll();
+    const Campaign = await this.CampaignService.findAll();
 
     return {
       is_success: true,
-      message: 'Properties fetched successfully',
-      data: properties,
+      message: 'Campaign fetched successfully',
+      data: Campaign,
     };
   }
 

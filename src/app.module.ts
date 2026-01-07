@@ -12,6 +12,7 @@ import { DataSource } from 'typeorm';
 import { PropertyModule } from './property/property.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LeadModule } from './lead/lead.module';
+import { CampaignModule } from './campaign/campaign.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { LeadModule } from './lead/lead.module';
     UsersModule,
     PropertyModule,
     LeadModule,
+    CampaignModule,
   ],
   controllers: [AppController],
   providers: [AppService],

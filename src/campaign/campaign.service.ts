@@ -19,18 +19,12 @@ export class CampaignService {
   async create(dto: CreateCampaignDto): Promise<Campaign> {
     const exists = await this.campaignRepository.findOne({
       where: {
-        street_address: dto.street_address,
-        unit_apt: dto.unit_apt || undefined,
-        city: dto.city,
-        state: dto.state,
-        zip_code: dto.zip_code,
+        name: dto.name,
       },
     });
 
     if (exists) {
-      throw new ConflictException(
-        'campaign with the same address already exists',
-      );
+      throw new ConflictException('campaign already exists');
     }
 
     const campaign = this.campaignRepository.create(dto);

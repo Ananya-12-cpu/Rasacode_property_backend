@@ -4,130 +4,161 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  Unique,
 } from 'typeorm';
 
-@Entity({ schema: 'dbo', name: 'RealEstateProperties' })
-@Unique('UQ_realestateproperty_address', [
-  'street_address',
-  'unit_apt',
-  'city',
-  'state',
-  'zip_code',
-])
+@Entity({ schema: 'dbo', name: 'Campaigns' })
 export class Campaign {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // Listing info
-  @Column({ type: 'date', nullable: true })
-  listing_date: string;
+  // --------------------
+  // Basic Campaign Info
+  // --------------------
+  @Column({ length: 100 })
+  name: string;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
-  listing_price: number;
+  @Column({ length: 50 })
+  campaign_type: string;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
-  asking_price: number;
+  @Column({ type: 'simple-array' })
+  channel: string[];
 
-  // Address
-  @Column({ nullable: true })
-  street_address: string;
+  // --------------------
+  // Schedule
+  // --------------------
+  @Column({ type: 'date' })
+  scheduled_start_date: string;
 
-  @Column({ nullable: true })
-  unit_apt: string;
+  @Column({ type: 'date' })
+  scheduled_end_date: string;
 
-  @Column({ nullable: true })
-  city: string;
+  @Column({ length: 5 })
+  scheduled_start_time: string;
 
-  @Column({ nullable: true })
-  state: string;
+  @Column({ length: 5 })
+  scheduled_end_time: string;
 
-  @Column({ nullable: true })
-  zip_code: string;
+  // --------------------
+  // Email / Messaging
+  // --------------------
+  @Column({ length: 150 })
+  subject_line: string;
 
-  @Column({ nullable: true })
-  county: string;
+  @Column({ type: 'text' })
+  email_content: string;
 
-  // Campaign details
-  @Column({ nullable: true })
-  property_type: string;
+  // --------------------
+  // Status & Flags
+  // --------------------
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: 'draft',
+  })
+  status: string;
 
-  @Column({ type: 'int', nullable: true })
-  bedrooms: number;
+  @Column({ type: 'bit', default: false })
+  use_ai_personalization?: boolean;
 
-  @Column({ type: 'int', nullable: true })
-  bathrooms: number;
-
-  @Column({ type: 'int', nullable: true })
-  square_feet: number;
-
-  @Column({ nullable: true })
-  lot_size: string;
-
-  @Column({ type: 'int', nullable: true })
-  year_built: number;
-
-  @Column({ type: 'int', default: 0 })
-  garage_spaces: number;
-
-  @Column({ type: 'int', default: 0 })
-  parking_spaces: number;
-
-  // Campaign condition
-  @Column({ nullable: true })
-  roof_age: string;
+  // --------------------
+  // Geographic Scope
+  // --------------------
+  @Column({ nullable: true, length: 20 })
+  geographic_scope_type?: string;
 
   @Column({ nullable: true })
-  roof_status: string;
+  property_type?: string;
 
-  @Column({ nullable: true })
-  interior_condition: string;
+  // --------------------
+  // Price Range
+  // --------------------
+  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true })
+  min_price?: number;
 
-  @Column({ default: false })
-  exterior_paint_required: boolean;
+  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true })
+  max_price?: number;
 
-  @Column({ default: false })
-  new_floor_required: boolean;
-
-  @Column({ default: false })
-  kitchen_renovation_required: boolean;
-
-  @Column({ default: false })
-  bathroom_renovation_required: boolean;
-
-  @Column({ default: false })
-  drywall_repair_required: boolean;
-
-  @Column({ default: false })
-  interior_paint_required: boolean;
-
-  // Financial
-  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
-  arv: number;
-
-  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
-  repair_estimate: number;
-
-  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
-  holding_costs: number;
-
-  @Column({ nullable: true })
-  transaction_type: string;
-
-  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
-  assignment_fee: number;
-
-  // Notes
-  @Column({ type: 'text', nullable: true })
-  property_description: string;
-
-  @Column({ type: 'text', nullable: true })
-  seller_notes: string;
-
-  // Images (stored as array of URLs)
+  // --------------------
+  // Distress Indicators
+  // --------------------
   @Column({ type: 'simple-array', nullable: true })
-  images: string[];
+  distress_indicators?: string[];
 
+  // --------------------
+  // Buyer Finder – Demographics
+  // --------------------
+  @Column({ nullable: true })
+  last_qualification?: string;
+
+  @Column({ nullable: true })
+  age_range?: string;
+
+  @Column({ nullable: true })
+  ethnicity?: string;
+
+  @Column({ nullable: true })
+  salary_range?: string;
+
+  @Column({ nullable: true })
+  marital_status?: string;
+
+  @Column({ nullable: true })
+  employment_status?: string;
+
+  @Column({ nullable: true })
+  home_ownership_status?: string;
+
+  // --------------------
+  // Buyer Geography
+  // --------------------
+  @Column({ nullable: true })
+  buyer_country?: string;
+
+  @Column({ nullable: true })
+  buyer_state?: string;
+
+  @Column({ nullable: true })
+  buyer_counties?: string;
+
+  @Column({ nullable: true })
+  buyer_city?: string;
+
+  @Column({ nullable: true })
+  buyer_districts?: string;
+
+  @Column({ nullable: true })
+  buyer_parish?: string;
+
+  // --------------------
+  // Seller Geography
+  // --------------------
+  @Column({ nullable: true })
+  seller_country?: string;
+
+  @Column({ nullable: true })
+  seller_state?: string;
+
+  @Column({ nullable: true })
+  seller_counties?: string;
+
+  @Column({ nullable: true })
+  seller_city?: string;
+
+  @Column({ nullable: true })
+  seller_districts?: string;
+
+  @Column({ nullable: true })
+  seller_parish?: string;
+
+  // --------------------
+  // Seller Extra
+  // --------------------
+  @Column({ type: 'varchar', length: 1000, nullable: true })
+  seller_keywords?: string;
+
+  // --------------------
+  // Audit
+  // --------------------
   @CreateDateColumn()
   created_at: Date;
 
