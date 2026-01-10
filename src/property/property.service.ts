@@ -21,7 +21,10 @@ export class PropertyService {
     private readonly propertyRepository: Repository<Property>,
   ) {}
 
-  async create(dto: CreatePropertyDto): Promise<Property> {
+  async create(
+    dto: CreatePropertyDto,
+    images: Express.Multer.File[],
+  ): Promise<Property> {
     const exists = await this.propertyRepository.findOne({
       where: {
         street_address: dto.street_address,
@@ -38,7 +41,14 @@ export class PropertyService {
       );
     }
 
-    const property = this.propertyRepository.create(dto);
+    const imageUrls = images.map((file) => file.filename);
+
+    // dto.images = imageUrls;
+
+    const property = this.propertyRepository.create({
+      ...dto,
+      images: imageUrls,
+    });
     return this.propertyRepository.save(property);
   }
   findAll() {

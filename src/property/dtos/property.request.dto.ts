@@ -3,7 +3,6 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
-  IsArray,
   IsDateString,
   Min,
 } from 'class-validator';
@@ -172,12 +171,12 @@ export class CreatePropertyDto {
   @IsString()
   seller_notes?: string;
 
-  // Images
-  @ApiProperty({
-    example: ['https://img1.jpg', 'https://img2.jpg'],
-    isArray: true,
-  })
-  @IsArray()
-  @IsString({ each: true })
-  images: string[];
+  // // Images
+  // @ApiProperty({
+  //   example: ['https://img1.jpg', 'https://img2.jpg'],
+  //   isArray: true,
+  // })
+  // @IsArray()
+  // @IsString({ each: true })
+  // images: string[];
 }

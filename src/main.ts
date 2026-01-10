@@ -13,12 +13,12 @@ async function bootstrap() {
     credentials: true,
   });
   app.useGlobalPipes(
-    new ValidationPipe(),
-    //   {
-    //   whitelist: true,
-    //   forbidNonWhitelisted: true,
-    //   transform: true,
-    // }
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
   );
   // Enable global serialization interceptor
   // app.useGlobalInterceptors(
