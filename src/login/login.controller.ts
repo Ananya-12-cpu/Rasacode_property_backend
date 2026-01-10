@@ -4,12 +4,26 @@ import { LoginRequestDto } from './dtos/login.request.dto';
 import { LoginDataDto } from './dtos/login.response.dto';
 import { GenericResponseDto } from '../login/dtos/generic-response.dto';
 import { plainToInstance } from 'class-transformer';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class LoginController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
+  @ApiOperation({
+    summary: 'Login user',
+    description: 'Login with email (username) and password',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User logged in successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials',
+  })
   async login(
     @Body() body: LoginRequestDto,
   ): Promise<GenericResponseDto<LoginDataDto>> {

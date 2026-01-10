@@ -4,12 +4,26 @@ import { AuthService } from '../auth/auth.service';
 import { RegisterResponseDto } from './dtos/register-response.dto';
 import { GenericResponseDto } from './dtos/generic-response.dto';
 import { plainToInstance } from 'class-transformer';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('register')
 export class RegisterController {
   constructor(private readonly authService: AuthService) {}
 
   @Post()
+  @ApiOperation({
+    summary: 'Register a new user',
+    description: 'Register a new user with email (username), password, and optional details',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'User registered successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Passwords do not match or User already exists',
+  })
   async register(
     @Body()
     body: RegisterRequestDto,
