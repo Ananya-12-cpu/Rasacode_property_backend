@@ -9,7 +9,9 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  Req,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dtos/property.request.dto';
 import { GenericResponseDto } from './dtos/generic-response.dto';
@@ -28,6 +30,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { transformImageUrls } from '../common/helpers/file-url.helper';
 
 @ApiTags('Properties')
 @Controller('properties')
@@ -109,14 +112,22 @@ export class PropertyController {
   async create(
     @Body() dto: CreatePropertyDto,
     @UploadedFiles() images: Express.Multer.File[],
+    @Req() req: Request,
   ) {
     console.log('DTO:', dto);
     const property = await this.propertyService.create(dto, images);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Transform image filenames to full URLs
+    const propertyWithUrls = {
+      ...property,
+      images: transformImageUrls(property.images || [], baseUrl),
+    };
 
     return {
       is_success: true,
       message: 'Property created successfully',
-      data: property,
+      data: propertyWithUrls,
     };
   }
 
@@ -135,13 +146,20 @@ export class PropertyController {
   // GET ALL
   @Get()
   @ApiOperation({ summary: 'Get all properties' })
-  async findAll(): Promise<GenericResponseDto<Property[]>> {
+  async findAll(@Req() req: Request): Promise<GenericResponseDto<Property[]>> {
     const properties = await this.propertyService.findAll();
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Transform image filenames to full URLs
+    const propertiesWithUrls = properties.map((property) => ({
+      ...property,
+      images: transformImageUrls(property.images || [], baseUrl),
+    }));
 
     return {
       is_success: true,
       message: 'Properties fetched successfully',
-      data: properties,
+      data: propertiesWithUrls,
     };
   }
 
@@ -151,13 +169,21 @@ export class PropertyController {
   @ApiParam({ name: 'id', type: Number })
   async findOne(
     @Param('id') id: number,
+    @Req() req: Request,
   ): Promise<GenericResponseDto<Property>> {
     const property = await this.propertyService.findOne(+id);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Transform image filenames to full URLs
+    const propertyWithUrls = {
+      ...property,
+      images: transformImageUrls(property.images || [], baseUrl),
+    };
 
     return {
       is_success: true,
       message: 'Property fetched successfully',
-      data: property,
+      data: propertyWithUrls,
     };
   }
 
