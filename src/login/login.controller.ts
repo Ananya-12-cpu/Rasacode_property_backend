@@ -42,10 +42,10 @@ export class LoginController {
     }) as GenericResponseDto<LoginDataDto>;
   }
 
-  @Post('refresh')
-  async refresh(@Body() body: { userId: number; refreshToken: string }) {
-    return this.authService.refreshTokens(body.userId, body.refreshToken);
-  }
+  // @Post('refresh')
+  // async refresh(@Body() body: { userId: number; refreshToken: string }) {
+  //   return this.authService.refreshTokens(body.userId, body.refreshToken);
+  // }
 
   @Post('logout')
   async logout(@Body() body: { userId: number }) {
