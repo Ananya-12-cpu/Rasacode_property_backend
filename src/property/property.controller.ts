@@ -187,16 +187,68 @@ export class PropertyController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update property' })
   @ApiParam({ name: 'id', type: Number })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      storage: diskStorage({
+        destination: './uploads/properties',
+        filename: (req, file, cb) => {
+          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(
+            null,
+            file.originalname.split('.')[0] +
+              '-' +
+              uniqueName +
+              extname(file.originalname),
+          );
+        },
+      }),
+    }),
+  )
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        listing_date: { type: 'string', example: '2025-01-01' },
+        listing_price: { type: 'number' },
+        asking_price: { type: 'number' },
+        street_address: { type: 'string' },
+        city: { type: 'string' },
+        state: { type: 'string' },
+        zip_code: { type: 'string' },
+        bedrooms: { type: 'number' },
+        bathrooms: { type: 'number' },
+        square_feet: { type: 'number' },
+        property_description: { type: 'string' },
+
+        // 🔥 FILE FIELD
+        images: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+  })
   async update(
     @Param('id') id: number,
     @Body() dto: UpdatePropertyDto,
+    @UploadedFiles() images: Express.Multer.File[],
+    @Req() req: Request,
   ): Promise<GenericResponseDto<Property>> {
-    const property = await this.propertyService.update(+id, dto);
+    const property = await this.propertyService.update(+id, dto, images);
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     return {
       is_success: true,
       message: 'Property updated successfully',
-      data: property,
+      data: {
+        ...property,
+        images: transformImageUrls(property.images || [], baseUrl),
+      },
     };
   }
 

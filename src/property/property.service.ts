@@ -67,20 +67,42 @@ export class PropertyService {
     return property;
   }
 
-  // findOne(id: number) {
-  //   return this.propertyRepository.findOne({ where: { id } });
+  // async update(id: number, dto: UpdatePropertyDto): Promise<Property> {
+  //   const property = await this.propertyRepository.findOne({
+  //     where: { id },
+  //   });
+
+  //   if (!property) {
+  //     throw new NotFoundException(`Property with id ${id} not found`);
+  //   }
+
+  //   Object.assign(property, dto);
+
+  //   return this.propertyRepository.save(property);
   // }
 
-  async update(id: number, dto: UpdatePropertyDto): Promise<Property> {
+  async update(
+    id: number,
+    dto: UpdatePropertyDto,
+    images?: Express.Multer.File[],
+  ): Promise<Property> {
     const property = await this.propertyRepository.findOne({
       where: { id },
     });
 
     if (!property) {
-      throw new NotFoundException(`Property with id ${id} not found`);
+      throw new NotFoundException('Property not found');
+    }
+
+    let imageNames = property.images || [];
+
+    if (images && images.length > 0) {
+      const newImages = images.map((file) => file.filename);
+      imageNames = [...imageNames, ...newImages];
     }
 
     Object.assign(property, dto);
+    property.images = imageNames;
 
     return this.propertyRepository.save(property);
   }
