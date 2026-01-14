@@ -1,0 +1,174 @@
+### API Requests Examples for RBAC System
+### Use this file with REST Client extension in VS Code
+
+@baseUrl = http://localhost:3000
+@token = YOUR_JWT_TOKEN_HERE
+
+### ========================================
+### 1. Create Super Admin Role
+### ========================================
+POST {{baseUrl}}/rbac/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role": "super_admin",
+  "permission": [
+    {
+      "campaign": {
+        "add": true,
+        "view": true,
+        "edit": true,
+        "delete": true
+      },
+      "properties": {
+        "add": true,
+        "view": true,
+        "edit": true,
+        "delete": true
+      }
+    }
+  ]
+}
+
+### ========================================
+### 2. Create User Role
+### ========================================
+POST {{baseUrl}}/rbac/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role": "user",
+  "permission": [
+    {
+      "campaign": {
+        "add": false,
+        "view": true,
+        "edit": true,
+        "delete": true
+      },
+      "properties": {
+        "add": true,
+        "view": true,
+        "edit": false,
+        "delete": false
+      }
+    }
+  ]
+}
+
+### ========================================
+### 3. Get All Roles
+### ========================================
+GET {{baseUrl}}/rbac/roles
+Authorization: Bearer {{token}}
+
+### ========================================
+### 4. Get Role by ID
+### ========================================
+GET {{baseUrl}}/rbac/roles/1
+Authorization: Bearer {{token}}
+
+### ========================================
+### 5. Update Role
+### ========================================
+PATCH {{baseUrl}}/rbac/roles/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "permission": [
+    {
+      "campaign": {
+        "add": true,
+        "view": true,
+        "edit": true,
+        "delete": false
+      },
+      "properties": {
+        "add": true,
+        "view": true,
+        "edit": true,
+        "delete": false
+      }
+    }
+  ]
+}
+
+### ========================================
+### 6. Delete Role
+### ========================================
+DELETE {{baseUrl}}/rbac/roles/3
+Authorization: Bearer {{token}}
+
+### ========================================
+### 7. Get My Permissions
+### ========================================
+GET {{baseUrl}}/rbac/my-permissions
+Authorization: Bearer {{token}}
+
+### ========================================
+### 8. Test Property Creation (requires 'add' permission)
+### ========================================
+POST {{baseUrl}}/properties
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "listing_date": "2025-01-01",
+  "listing_price": 450000,
+  "street_address": "123 Main St",
+  "city": "New York",
+  "state": "NY",
+  "zip_code": "10001"
+}
+
+### ========================================
+### 9. Test Property View (requires 'view' permission)
+### ========================================
+GET {{baseUrl}}/properties/1
+Authorization: Bearer {{token}}
+
+### ========================================
+### 10. Test Property Update (requires 'edit' permission)
+### ========================================
+PUT {{baseUrl}}/properties/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "listing_price": 460000
+}
+
+### ========================================
+### 11. Test Property Delete (requires 'delete' permission)
+### ========================================
+DELETE {{baseUrl}}/properties/1
+Authorization: Bearer {{token}}
+
+### ========================================
+### 12. Login as User (get JWT token)
+### ========================================
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "user@example.com",
+  "password": "password123"
+}
+
+### ========================================
+### Expected Results:
+### ========================================
+###
+### For USER role (limited permissions):
+### - POST /properties -> ✅ SUCCESS (has 'add' permission)
+### - GET /properties/:id -> ✅ SUCCESS (has 'view' permission)
+### - PUT /properties/:id -> ❌ FORBIDDEN (no 'edit' permission)
+### - DELETE /properties/:id -> ❌ FORBIDDEN (no 'delete' permission)
+###
+### For SUPER_ADMIN role (full permissions):
+### - ALL endpoints -> ✅ SUCCESS
+###
+### ========================================

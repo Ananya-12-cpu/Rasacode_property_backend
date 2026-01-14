@@ -16,6 +16,9 @@ export class LoginUserDto {
 
   @Expose()
   phone_number: string | null;
+
+  @Expose()
+  role: string | null;
 }
 
 /* ---------- Tokens DTO ---------- */

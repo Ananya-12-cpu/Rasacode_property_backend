@@ -21,6 +21,8 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RbacGuard } from 'src/rbac/guards/rbac.guard';
+import { RequirePermission } from 'src/rbac/decorators/require-permission.decorator';
 
 @ApiTags('Campaign')
 @Controller('Campaign')
@@ -31,7 +33,8 @@ export class CampaignController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @RequirePermission({ resource: 'campaign', action: 'add' })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a campaign' })
   @ApiResponse({ status: 201, description: 'Campaign created successfully' })
@@ -49,6 +52,9 @@ export class CampaignController {
 
   // GET ALL
   @Get()
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @RequirePermission({ resource: 'campaign', action: 'view' })
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all Campaign' })
   async findAll(): Promise<GenericResponseDto<Campaign[]>> {
     const Campaign = await this.CampaignService.findAll();
@@ -78,7 +84,8 @@ export class CampaignController {
 
   //UPDATE
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @RequirePermission({ resource: 'campaign', action: 'edit' })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update campaign' })
   @ApiParam({ name: 'id', type: Number })
@@ -97,7 +104,8 @@ export class CampaignController {
 
   // DELETE
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @RequirePermission({ resource: 'campaign', action: 'delete' })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete campaign' })
   @ApiParam({ name: 'id', type: Number })

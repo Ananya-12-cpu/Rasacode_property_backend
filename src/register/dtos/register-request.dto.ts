@@ -4,8 +4,9 @@ import {
   MaxLength,
   MinLength,
   IsEmail,
+  IsOptional,
 } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterRequestDto {
   @ApiPropertyOptional({
@@ -38,5 +39,15 @@ export class RegisterRequestDto {
 
   @ApiPropertyOptional({ example: '+919876543210' })
   @IsPhoneNumber('IN')
+  @IsOptional()
   phone_number?: string;
+
+  @ApiProperty({
+    example: 'super_admin',
+    description: 'Role name to assign to the user (defaults to "user" if not provided)',
+    enum: ['super_admin', 'user', 'manager'],
+  })
+  @IsString()
+  @IsOptional()
+  role?: string;
 }

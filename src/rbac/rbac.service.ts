@@ -1,0 +1,180 @@
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Role } from '../entities/role.entity';
+import { Permission } from '../entities/permission.entity';
+import { User } from '../entities/user.entity';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+
+@Injectable()
+export class RbacService {
+  constructor(
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
+    @InjectRepository(Permission)
+    private permissionRepository: Repository<Permission>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
+
+  async createRole(createRoleDto: CreateRoleDto): Promise<Role> {
+    const existingRole = await this.roleRepository.findOne({
+      where: { Name: createRoleDto.role },
+    });
+
+    if (existingRole) {
+      throw new ConflictException('Role already exists');
+    }
+
+    const role = this.roleRepository.create({
+      Name: createRoleDto.role,
+    });
+
+    const savedRole = await this.roleRepository.save(role);
+
+    // Create permissions for the role
+    for (const permissionData of createRoleDto.permission) {
+      const permission = this.permissionRepository.create({
+        role: savedRole,
+        permissions: permissionData,
+      });
+      await this.permissionRepository.save(permission);
+    }
+
+    return this.findRoleById(savedRole.Id);
+  }
+
+  async findAllRoles(): Promise<Role[]> {
+    return this.roleRepository.find({
+      relations: ['permissions'],
+    });
+  }
+
+  async findRoleById(id: number): Promise<Role> {
+    const role = await this.roleRepository.findOne({
+      where: { Id: id },
+      relations: ['permissions'],
+    });
+
+    if (!role) {
+      throw new NotFoundException(`Role with ID ${id} not found`);
+    }
+
+    return role;
+  }
+
+  async findRoleByName(name: string): Promise<Role> {
+    const role = await this.roleRepository.findOne({
+      where: { Name: name },
+      relations: ['permissions'],
+    });
+
+    if (!role) {
+      throw new NotFoundException(`Role with name ${name} not found`);
+    }
+
+    return role;
+  }
+
+  async updateRole(id: number, updateRoleDto: UpdateRoleDto): Promise<Role> {
+    const role = await this.findRoleById(id);
+
+    if (updateRoleDto.role) {
+      const existingRole = await this.roleRepository.findOne({
+        where: { Name: updateRoleDto.role },
+      });
+
+      if (existingRole && existingRole.Id !== id) {
+        throw new ConflictException('Role name already exists');
+      }
+
+      role.Name = updateRoleDto.role;
+      await this.roleRepository.save(role);
+    }
+
+    if (updateRoleDto.permission) {
+      // Delete existing permissions
+      await this.permissionRepository.delete({ role: { Id: id } });
+
+      // Fetch the role again to ensure we have the latest state
+      const updatedRole = await this.roleRepository.findOne({
+        where: { Id: id },
+      });
+
+      if (!updatedRole) {
+        throw new NotFoundException(`Role with ID ${id} not found`);
+      }
+
+      // Create new permissions
+      for (const permissionData of updateRoleDto.permission) {
+        const permission = this.permissionRepository.create({
+          role: updatedRole,
+          permissions: permissionData,
+        });
+        await this.permissionRepository.save(permission);
+      }
+    }
+
+    return this.findRoleById(id);
+  }
+
+  async deleteRole(id: number): Promise<void> {
+    const role = await this.findRoleById(id);
+    await this.roleRepository.remove(role);
+  }
+
+  async checkPermission(
+    userId: number,
+    resource: 'campaign' | 'properties',
+    action: 'add' | 'view' | 'edit' | 'delete',
+  ): Promise<boolean> {
+    // Query from User side to get their roles and permissions
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'role')
+      .leftJoinAndSelect('role.permissions', 'permission')
+      .where('user.id = :userId', { userId })
+      .getOne();
+
+    if (!user || !user.roles || user.roles.length === 0) {
+      return false;
+    }
+
+    // Check if user has the required permission
+    for (const role of user.roles) {
+      for (const permission of role.permissions) {
+        if (permission.permissions[resource]) {
+          if (permission.permissions[resource][action]) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  async getUserPermissions(userId: number): Promise<any> {
+    // Query from User side to get their roles and permissions
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'role')
+      .leftJoinAndSelect('role.permissions', 'permission')
+      .where('user.id = :userId', { userId })
+      .getOne();
+
+    if (!user || !user.roles) {
+      return [];
+    }
+
+    return user.roles.map((role) => ({
+      role: role.Name,
+      permissions: role.permissions.map((p) => p.permissions),
+    }));
+  }
+}

@@ -13,6 +13,7 @@ import { PropertyModule } from './property/property.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LeadModule } from './lead/lead.module';
 import { CampaignModule } from './campaign/campaign.module';
+import { RbacModule } from './rbac/rbac.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { CampaignModule } from './campaign/campaign.module';
     PropertyModule,
     LeadModule,
     CampaignModule,
+    RbacModule,
   ],
   controllers: [AppController],
   providers: [AppService],

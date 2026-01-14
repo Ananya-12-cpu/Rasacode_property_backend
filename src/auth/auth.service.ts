@@ -24,7 +24,6 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  /*************  ✨ Windsurf Command ⭐  *************/
   /**
    * Register a new user with the given credentials.
    * @param username the username for the new user
@@ -32,15 +31,16 @@ export class AuthService {
    * @param first_name the first name for the new user (optional)
    * @param last_name the last name for the new user (optional)
    * @param phone_number the phone number for the new user (optional)
+   * @param role the role name to assign to the user (optional, defaults to 'user')
    * @returns an object containing the new user's credentials and tokens
    */
-  /*******  a622303a-7b68-44de-9169-f8b2c9fbdd70  *******/
   async register(
     username: string,
     password: string,
     first_name?: string,
     last_name?: string,
     phone_number?: string,
+    role?: string,
   ) {
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await this.usersService.create(
@@ -49,6 +49,7 @@ export class AuthService {
       first_name,
       last_name,
       phone_number,
+      role,
     );
     const tokens = await this.getTokens(user.id, user.username);
     const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
@@ -59,6 +60,7 @@ export class AuthService {
       first_name: user.first_name ?? first_name ?? null,
       last_name: user.last_name ?? last_name ?? null,
       phone_number: user.phone_number ?? phone_number ?? null,
+      role: user.role,
       tokens,
     };
   }

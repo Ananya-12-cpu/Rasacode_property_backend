@@ -1,14 +1,17 @@
 // users/users.service.ts
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { User } from '../entities/user.entity';
+import { Role } from '../entities/role.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
 
   async create(
@@ -17,6 +20,7 @@ export class UsersService {
     first_name?: string,
     last_name?: string,
     phone_number?: string,
+    roleName?: string,
   ) {
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
@@ -27,6 +31,16 @@ export class UsersService {
       throw new BadRequestException('User already exists');
     }
 
+    // Get role - default to 'user' if not specified
+    const roleToAssign = roleName || 'user';
+    const role = await this.roleRepository.findOne({
+      where: { Name: roleToAssign },
+    });
+
+    if (!role) {
+      throw new NotFoundException(`Role '${roleToAssign}' not found. Please create the role first or use an existing role.`);
+    }
+
     // Create new user
     const user = this.userRepository.create({
       username,
@@ -35,6 +49,7 @@ export class UsersService {
       last_name: last_name ?? null,
       phone_number: phone_number ?? null,
       refreshTokenHash: null,
+      roles: [role],
     } as unknown as DeepPartial<User>);
 
     // Save to database
@@ -47,18 +62,21 @@ export class UsersService {
       first_name: savedUser.first_name,
       last_name: savedUser.last_name,
       phone_number: savedUser.phone_number,
+      role: role.Name,
     };
   }
 
   async findByUsername(username: string): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { username },
+      relations: ['roles', 'roles.permissions'],
     });
   }
 
   async findById(id: number): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { id },
+      relations: ['roles', 'roles.permissions'],
     });
   }
 

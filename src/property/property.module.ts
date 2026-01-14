@@ -3,9 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PropertyController } from './property.controller';
 import { PropertyService } from './property.service';
 import { Property } from './../entities/property.entity';
+import { RbacModule } from '../rbac/rbac.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Property])],
+  imports: [TypeOrmModule.forFeature([Property]), RbacModule],
   controllers: [PropertyController],
   providers: [PropertyService],
   exports: [TypeOrmModule],

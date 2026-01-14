@@ -31,6 +31,8 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { transformImageUrls } from '../common/helpers/file-url.helper';
+import { RbacGuard } from 'src/rbac/guards/rbac.guard';
+import { RequirePermission } from 'src/rbac/decorators/require-permission.decorator';
 
 @ApiTags('Properties')
 @Controller('properties')
@@ -41,7 +43,8 @@ export class PropertyController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @RequirePermission({ resource: 'properties', action: 'add' })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a property' })
   @ApiResponse({ status: 201, description: 'Property created successfully' })
@@ -54,7 +57,10 @@ export class PropertyController {
           const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
           cb(
             null,
-            file.originalname + '-' + uniqueName + extname(file.originalname),
+            file.originalname.split('.')[0] +
+              '-' +
+              uniqueName +
+              extname(file.originalname),
           );
         },
       }),
@@ -114,7 +120,6 @@ export class PropertyController {
     @UploadedFiles() images: Express.Multer.File[],
     @Req() req: Request,
   ) {
-    console.log('DTO:', dto);
     const property = await this.propertyService.create(dto, images);
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
@@ -130,18 +135,6 @@ export class PropertyController {
       data: propertyWithUrls,
     };
   }
-
-  // async create(
-  //   @Body() dto: CreatePropertyDto,
-  // ): Promise<GenericResponseDto<Property>> {
-  //   const property = await this.propertyService.create(dto);
-
-  //   return {
-  //     is_success: true,
-  //     message: 'Property created successfully',
-  //     data: property,
-  //   };
-  // }
 
   // GET ALL
   @Get()
@@ -189,7 +182,8 @@ export class PropertyController {
 
   //UPDATE
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @RequirePermission({ resource: 'properties', action: 'edit' })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update property' })
   @ApiParam({ name: 'id', type: Number })
@@ -208,7 +202,8 @@ export class PropertyController {
 
   // DELETE
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @RequirePermission({ resource: 'properties', action: 'delete' })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete property' })
   @ApiParam({ name: 'id', type: Number })
