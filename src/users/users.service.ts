@@ -1,9 +1,5 @@
 // users/users.service.ts
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { User } from '../entities/user.entity';
@@ -42,9 +38,7 @@ export class UsersService {
     });
 
     if (!role) {
-      throw new NotFoundException(
-        `Role '${roleToAssign}' not found. Please create the role first or use an existing role.`,
-      );
+      throw new NotFoundException(`Role '${roleToAssign}' not found. Please create the role first or use an existing role.`);
     }
 
     // Create new user
