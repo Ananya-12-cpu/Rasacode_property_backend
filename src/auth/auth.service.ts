@@ -24,16 +24,6 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  /**
-   * Register a new user with the given credentials.
-   * @param username the username for the new user
-   * @param password the password for the new user
-   * @param first_name the first name for the new user (optional)
-   * @param last_name the last name for the new user (optional)
-   * @param phone_number the phone number for the new user (optional)
-   * @param role the role name to assign to the user (optional, defaults to 'user')
-   * @returns an object containing the new user's credentials and tokens
-   */
   async register(
     username: string,
     password: string,
