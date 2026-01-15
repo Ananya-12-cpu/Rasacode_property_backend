@@ -81,11 +81,21 @@ export class AuthService {
         first_name: user.first_name ?? null,
         last_name: user.last_name ?? null,
         phone_number: user.phone_number ?? null,
+        roles: user.roles,
       },
       tokens,
     };
   }
 
+  /*************  ✨ Windsurf Command ⭐  *************/
+  /**
+   * Refresh the user's tokens with the given refresh token.
+   * @param userId the id of the user to refresh tokens for
+   * @param refreshToken the refresh token to verify and use
+   * @returns an object containing the new access and refresh tokens
+   * @throws UnauthorizedException if the refresh token is invalid or not found
+   */
+  /*******  349f6b7f-b815-4417-94d2-f7bb21ebb27f  *******/
   async refreshTokens(userId: number, refreshToken: string) {
     const stored = await this.usersService.getRefreshTokenHash(userId);
     if (!stored) throw new UnauthorizedException('Refresh token not found');
