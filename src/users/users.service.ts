@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
+import { UserFilterDto } from './dto/user-filter.dto';
 
 @Injectable()
 export class UsersService {
@@ -100,16 +101,42 @@ export class UsersService {
     return user?.refreshTokenHash || null;
   }
 
-  async findAll() {
-    // Get all users and return without sensitive fields
-    const users = await this.userRepository.find();
+  async findAll(filterDto: UserFilterDto) {
+    const { search, page = 1, limit = 10 } = filterDto;
+    const skip = (page - 1) * limit;
 
-    return users.map((u) => ({
-      id: u.id,
-      username: u.username,
-      first_name: u.first_name,
-      last_name: u.last_name,
-      phone_number: u.phone_number,
-    }));
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+    // Global search filter - searches across multiple fields
+    if (search && search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.where(
+        '(user.username LIKE :search OR user.first_name LIKE :search OR user.last_name LIKE :search OR user.phone_number LIKE :search)',
+        { search: searchTerm },
+      );
+    }
+
+    // Get total count and paginated data
+    const [users, total] = await queryBuilder
+      .orderBy('user.id', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data: users.map((u) => ({
+        id: u.id,
+        username: u.username,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        phone_number: u.phone_number,
+      })),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }
