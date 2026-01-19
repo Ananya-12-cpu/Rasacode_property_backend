@@ -13,6 +13,10 @@ import { Repository } from 'typeorm';
 import { Property } from '././../entities/property.entity';
 import { CreatePropertyDto } from './dtos/property.request.dto';
 import { UpdatePropertyDto } from './dtos/property.update.dto';
+import {
+  PaginationQueryDto,
+  PaginatedResult,
+} from '../common/dto/pagination.dto';
 
 @Injectable()
 export class PropertyService {
@@ -51,8 +55,27 @@ export class PropertyService {
     });
     return this.propertyRepository.save(property);
   }
-  findAll() {
-    return this.propertyRepository.find();
+  async findAll(
+    paginationQuery: PaginationQueryDto,
+  ): Promise<PaginatedResult<Property>> {
+    const { page = 1, limit = 10 } = paginationQuery;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.propertyRepository.findAndCount({
+      skip,
+      take: limit,
+      order: { id: 'DESC' },
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: number): Promise<Property> {

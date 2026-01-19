@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CampaignService } from './campaign.service';
@@ -23,6 +24,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RbacGuard } from 'src/rbac/guards/rbac.guard';
 import { RequirePermission } from 'src/rbac/decorators/require-permission.decorator';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Campaign')
 @Controller('Campaign')
@@ -55,14 +57,15 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RbacGuard)
   @RequirePermission({ resource: 'campaign', action: 'view' })
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all Campaign' })
-  async findAll(): Promise<GenericResponseDto<Campaign[]>> {
-    const Campaign = await this.CampaignService.findAll();
+  @ApiOperation({ summary: 'Get all Campaign with pagination' })
+  async findAll(@Query() paginationQuery: PaginationQueryDto) {
+    const result = await this.CampaignService.findAll(paginationQuery);
 
     return {
       is_success: true,
       message: 'Campaign fetched successfully',
-      data: Campaign,
+      data: result.data,
+      pagination: result.meta,
     };
   }
 

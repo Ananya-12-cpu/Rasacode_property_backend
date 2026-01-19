@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Put,
+  Query,
   UseGuards,
   UseInterceptors,
   UploadedFiles,
@@ -33,6 +34,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { transformImageUrls } from '../common/helpers/file-url.helper';
 import { RbacGuard } from 'src/rbac/guards/rbac.guard';
 import { RequirePermission } from 'src/rbac/decorators/require-permission.decorator';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Properties')
 @Controller('properties')
@@ -138,13 +140,16 @@ export class PropertyController {
 
   // GET ALL
   @Get()
-  @ApiOperation({ summary: 'Get all properties' })
-  async findAll(@Req() req: Request): Promise<GenericResponseDto<Property[]>> {
-    const properties = await this.propertyService.findAll();
+  @ApiOperation({ summary: 'Get all properties with pagination' })
+  async findAll(
+    @Query() paginationQuery: PaginationQueryDto,
+    @Req() req: Request,
+  ) {
+    const result = await this.propertyService.findAll(paginationQuery);
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     // Transform image filenames to full URLs
-    const propertiesWithUrls = properties.map((property) => ({
+    const propertiesWithUrls = result.data.map((property) => ({
       ...property,
       images: transformImageUrls(property.images || [], baseUrl),
     }));
@@ -153,6 +158,7 @@ export class PropertyController {
       is_success: true,
       message: 'Properties fetched successfully',
       data: propertiesWithUrls,
+      pagination: result.meta,
     };
   }
 

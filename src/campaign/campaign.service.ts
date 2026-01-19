@@ -8,6 +8,10 @@ import { Repository } from 'typeorm';
 import { Campaign } from '././../entities/campaign.entity';
 import { CreateCampaignDto } from './dtos/campaign.request.dto';
 import { UpdateCampaignDto } from './dtos/campaign.update.dto';
+import {
+  PaginationQueryDto,
+  PaginatedResult,
+} from '../common/dto/pagination.dto';
 
 @Injectable()
 export class CampaignService {
@@ -30,8 +34,27 @@ export class CampaignService {
     const campaign = this.campaignRepository.create(dto);
     return this.campaignRepository.save(campaign);
   }
-  findAll() {
-    return this.campaignRepository.find();
+  async findAll(
+    paginationQuery: PaginationQueryDto,
+  ): Promise<PaginatedResult<Campaign>> {
+    const { page = 1, limit = 10 } = paginationQuery;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.campaignRepository.findAndCount({
+      skip,
+      take: limit,
+      order: { id: 'DESC' },
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: number): Promise<Campaign> {
