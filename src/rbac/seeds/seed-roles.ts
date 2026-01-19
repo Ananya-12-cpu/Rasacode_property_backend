@@ -18,6 +18,7 @@ export async function seedRoles(dataSource: DataSource) {
   // Create super_admin role
   const superAdminRole = roleRepository.create({
     Name: 'super_admin',
+    role_title: 'Super Admin',
   });
   await roleRepository.save(superAdminRole);
 
@@ -45,6 +46,7 @@ export async function seedRoles(dataSource: DataSource) {
   // Create user role
   const userRole = roleRepository.create({
     Name: 'user',
+    role_title: 'User',
   });
   await roleRepository.save(userRole);
 

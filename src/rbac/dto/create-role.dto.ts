@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, ValidateNested, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  ValidateNested,
+  IsArray,
+  IsOptional,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { PermissionStructureDto } from './permission-structure.dto';
@@ -12,6 +18,17 @@ export class CreateRoleDto {
   @IsString()
   @IsNotEmpty()
   role: string;
+
+  @ApiProperty({
+    description:
+      'The display title of the role (optional, auto-generated from role name if not provided)',
+    example: 'Super Admin',
+    type: String,
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  role_title?: string;
 
   @ApiProperty({
     description: 'Array of permission structures for different resources',

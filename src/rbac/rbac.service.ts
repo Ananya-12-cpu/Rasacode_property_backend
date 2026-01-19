@@ -31,8 +31,18 @@ export class RbacService {
       throw new ConflictException('Role already exists');
     }
 
+    // Auto-generate role_title from role name if not provided
+    // e.g., "super_admin" -> "Super Admin", "Viewers" -> "Viewers"
+    const roleTitle =
+      createRoleDto.role_title ||
+      createRoleDto.role
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
     const role = this.roleRepository.create({
       Name: createRoleDto.role,
+      role_title: roleTitle,
     });
 
     const savedRole = await this.roleRepository.save(role);
@@ -94,6 +104,13 @@ export class RbacService {
       }
 
       role.Name = updateRoleDto.role;
+    }
+
+    if (updateRoleDto.role_title) {
+      role.role_title = updateRoleDto.role_title;
+    }
+
+    if (updateRoleDto.role || updateRoleDto.role_title) {
       await this.roleRepository.save(role);
     }
 
@@ -174,6 +191,7 @@ export class RbacService {
 
     return user.roles.map((role) => ({
       role: role.Name,
+      role_title: role.role_title,
       permissions: role.permissions.map((p) => p.permissions),
     }));
   }

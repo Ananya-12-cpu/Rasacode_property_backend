@@ -16,6 +16,9 @@ export class Role {
   @Column({ unique: true })
   Name: string;
 
+  @Column({ nullable: true })
+  role_title: string;
+
   @OneToMany(() => Permission, (permission) => permission.role)
   permissions: Permission[];
 
