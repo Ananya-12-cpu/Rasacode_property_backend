@@ -34,7 +34,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { transformImageUrls } from '../common/helpers/file-url.helper';
 import { RbacGuard } from 'src/rbac/guards/rbac.guard';
 import { RequirePermission } from 'src/rbac/decorators/require-permission.decorator';
-import { PaginationQueryDto } from '../common/dto/pagination.dto';
+import { PropertyFilterDto } from './dto/property-filter.dto';
 
 @ApiTags('Properties')
 @Controller('properties')
@@ -140,12 +140,11 @@ export class PropertyController {
 
   // GET ALL
   @Get()
-  @ApiOperation({ summary: 'Get all properties with pagination' })
-  async findAll(
-    @Query() paginationQuery: PaginationQueryDto,
-    @Req() req: Request,
-  ) {
-    const result = await this.propertyService.findAll(paginationQuery);
+  @ApiOperation({
+    summary: 'Get all properties with global search, filters and pagination',
+  })
+  async findAll(@Query() filterDto: PropertyFilterDto, @Req() req: Request) {
+    const result = await this.propertyService.findAll(filterDto);
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     // Transform image filenames to full URLs

@@ -13,10 +13,7 @@ import { Repository } from 'typeorm';
 import { Property } from '././../entities/property.entity';
 import { CreatePropertyDto } from './dtos/property.request.dto';
 import { UpdatePropertyDto } from './dtos/property.update.dto';
-import {
-  PaginationQueryDto,
-  PaginatedResult,
-} from '../common/dto/pagination.dto';
+import { PropertyFilterDto } from './dto/property-filter.dto';
 
 @Injectable()
 export class PropertyService {
@@ -55,17 +52,42 @@ export class PropertyService {
     });
     return this.propertyRepository.save(property);
   }
-  async findAll(
-    paginationQuery: PaginationQueryDto,
-  ): Promise<PaginatedResult<Property>> {
-    const { page = 1, limit = 10 } = paginationQuery;
+  async findAll(filterDto: PropertyFilterDto) {
+    const { search, min_price, max_price, bedrooms, page = 1, limit = 10 } = filterDto;
     const skip = (page - 1) * limit;
 
-    const [data, total] = await this.propertyRepository.findAndCount({
-      skip,
-      take: limit,
-      order: { id: 'DESC' },
-    });
+    const queryBuilder = this.propertyRepository.createQueryBuilder('property');
+
+    // Global search filter - searches across multiple fields
+    if (search && search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.andWhere(
+        '(property.street_address LIKE :search OR property.city LIKE :search OR property.state LIKE :search OR property.zip_code LIKE :search OR property.property_type LIKE :search OR property.property_description LIKE :search)',
+        { search: searchTerm },
+      );
+    }
+
+    // Min price filter
+    if (min_price !== undefined) {
+      queryBuilder.andWhere('property.listing_price >= :min_price', { min_price });
+    }
+
+    // Max price filter
+    if (max_price !== undefined) {
+      queryBuilder.andWhere('property.listing_price <= :max_price', { max_price });
+    }
+
+    // Bedrooms filter
+    if (bedrooms !== undefined) {
+      queryBuilder.andWhere('property.bedrooms = :bedrooms', { bedrooms });
+    }
+
+    // Get total count and paginated data
+    const [data, total] = await queryBuilder
+      .orderBy('property.id', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
 
     return {
       data,
