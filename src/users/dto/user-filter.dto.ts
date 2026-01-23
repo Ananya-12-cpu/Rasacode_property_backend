@@ -4,8 +4,9 @@ import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class UserFilterDto {
   @ApiPropertyOptional({
-    description: 'Global search term (searches in username, first_name, last_name, phone_number)',
-    example: 'john',
+    description:
+      'Global search term (searches in username, first_name, last_name, phone_number)',
+    // example: 'john',
   })
   @IsOptional()
   @IsString()

@@ -8,6 +8,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
+import {
+  UserSubscription,
+  SubscriptionStatus,
+} from '../entities/user-subscription.entity';
 import { UserFilterDto } from './dto/user-filter.dto';
 
 @Injectable()
@@ -17,6 +21,8 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(UserSubscription)
+    private readonly subscriptionRepository: Repository<UserSubscription>,
   ) {}
 
   async create(
@@ -123,14 +129,50 @@ export class UsersService {
       .take(limit)
       .getManyAndCount();
 
+    // Get active subscriptions for all users
+    const userIds = users.map((u) => u.id);
+    const subscriptionMap = new Map<number, UserSubscription>();
+    if (userIds.length > 0) {
+      const allSubscriptions = await this.subscriptionRepository
+        .createQueryBuilder('subscription')
+        .leftJoinAndSelect('subscription.plan', 'plan')
+        .where('subscription.user_id IN (:...userIds)', { userIds })
+        .andWhere('subscription.status = :status', {
+          status: SubscriptionStatus.ACTIVE,
+        })
+        .getMany();
+
+      allSubscriptions.forEach((sub) => {
+        subscriptionMap.set(sub.user_id, sub);
+      });
+    }
+
     return {
-      data: users.map((u) => ({
-        id: u.id,
-        username: u.username,
-        first_name: u.first_name,
-        last_name: u.last_name,
-        phone_number: u.phone_number,
-      })),
+      data: users.map((u) => {
+        const subscription = subscriptionMap.get(u.id);
+        return {
+          id: u.id,
+          username: u.username,
+          first_name: u.first_name,
+          last_name: u.last_name,
+          phone_number: u.phone_number,
+          subscription: subscription
+            ? {
+                id: subscription.id,
+                status: subscription.status,
+                start_date: subscription.start_date,
+                end_date: subscription.end_date,
+                plan: {
+                  id: subscription.plan.id,
+                  name: subscription.plan.name,
+                  display_name: subscription.plan.display_name,
+                  plan_type: subscription.plan.plan_type,
+                  price: subscription.plan.price,
+                },
+              }
+            : null,
+        };
+      }),
       pagination: {
         total,
         page,

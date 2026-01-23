@@ -14,6 +14,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LeadModule } from './lead/lead.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { RbacModule } from './rbac/rbac.module';
+import { PlanModule } from './plan/plan.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
   imports: [
@@ -53,6 +55,8 @@ import { RbacModule } from './rbac/rbac.module';
     LeadModule,
     CampaignModule,
     RbacModule,
+    PlanModule,
+    SubscriptionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,14 +1,22 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { jwtConstants } from './jwt.constants';
+import {
+  UserSubscription,
+  SubscriptionStatus,
+} from '../entities/user-subscription.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    @InjectRepository(UserSubscription)
+    private readonly subscriptionRepository: Repository<UserSubscription>,
   ) {}
 
   private async getTokens(userId: number, username: string) {
@@ -63,7 +71,16 @@ export class AuthService {
     const tokens = await this.getTokens(user.id, user.username);
     const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
     await this.usersService.setRefreshTokenHash(user.id, refreshHash);
-    // return tokens;
+
+    // Get user's active subscription with plan details
+    const subscription = await this.subscriptionRepository.findOne({
+      where: {
+        user_id: user.id,
+        status: SubscriptionStatus.ACTIVE,
+      },
+      relations: ['plan', 'plan.role', 'plan.role.permissions'],
+    });
+
     return {
       user: {
         id: user.id,
@@ -73,6 +90,23 @@ export class AuthService {
         phone_number: user.phone_number ?? null,
         roles: user.roles,
       },
+      subscription: subscription
+        ? {
+            id: subscription.id,
+            status: subscription.status,
+            start_date: subscription.start_date,
+            end_date: subscription.end_date,
+            plan: {
+              id: subscription.plan.id,
+              name: subscription.plan.name,
+              display_name: subscription.plan.display_name,
+              plan_type: subscription.plan.plan_type,
+              price: subscription.plan.price,
+              billing_cycle: subscription.plan.billing_cycle,
+              features: subscription.plan.features,
+            },
+          }
+        : null,
       tokens,
     };
   }
