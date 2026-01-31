@@ -23,29 +23,12 @@ export class LeadController {
   @ApiOperation({ summary: 'Get lead properties for a user' })
   // @ApiQuery({ name: 'userId', required: false, type: Number })
   @ApiOkResponse({ description: 'Lead properties fetched successfully' })
-  async findAll(@Req() req): Promise<GenericResponseDto<any>> {
+  async findAll(@Req() req): Promise<GenericResponseDto<Property[]>> {
     const data = await this.leadService.getLeadProperties(req?.user?.userId);
 
     return {
       is_success: true,
       message: 'Leads fetched successfully',
-      data,
-    };
-  }
-
-  @Get('score/:propertyId')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get lead score for a specific property' })
-  @ApiParam({ name: 'propertyId', type: Number })
-  @ApiOkResponse({ description: 'Lead score calculated successfully' })
-  async getLeadScore(
-    @Param('propertyId') propertyId: number,
-  ): Promise<GenericResponseDto<any>> {
-    const data = await this.leadService.scorePropertyById(propertyId);
-    return {
-      is_success: true,
-      message: 'Lead score calculated successfully',
       data,
     };
   }

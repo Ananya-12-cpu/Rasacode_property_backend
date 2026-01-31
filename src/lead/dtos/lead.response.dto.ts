@@ -34,23 +34,6 @@ export class LeadResponseDto {
   })
   images?: string[];
 
-  @ApiProperty({ example: 72 })
-  lead_score?: number;
-
-  @ApiProperty({ example: 'WARM', enum: ['HOT', 'WARM', 'COLD'] })
-  lead_status?: 'HOT' | 'WARM' | 'COLD';
-
-  @ApiProperty({
-    example: { location: 25, price: 18, condition: 10, urgency: 12, fundamentals: 15 },
-  })
-  lead_score_breakdown?: {
-    location: number;
-    price: number;
-    condition: number;
-    urgency: number;
-    fundamentals: number;
-  };
-
   @ApiProperty({ example: '2025-01-10T12:30:00Z' })
   created_at: string;
 
