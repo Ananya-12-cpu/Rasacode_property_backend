@@ -13,6 +13,7 @@ import {
   SubscriptionStatus,
 } from '../entities/user-subscription.entity';
 import { UserFilterDto } from './dto/user-filter.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -105,6 +106,71 @@ export class UsersService {
   async getRefreshTokenHash(userId: number): Promise<string | null> {
     const user = await this.findById(userId);
     return user?.refreshTokenHash || null;
+  }
+
+  async getUserById(id: number) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    const subscription = await this.subscriptionRepository
+      .createQueryBuilder('subscription')
+      .leftJoinAndSelect('subscription.plan', 'plan')
+      .where('subscription.user_id = :userId', { userId: id })
+      .andWhere('subscription.status = :status', {
+        status: SubscriptionStatus.ACTIVE,
+      })
+      .getOne();
+
+    return {
+      id: user.id,
+      username: user.username,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone_number: user.phone_number,
+      roles: user.roles.map((r) => r.Name),
+      subscription: subscription
+        ? {
+            id: subscription.id,
+            status: subscription.status,
+            start_date: subscription.start_date,
+            end_date: subscription.end_date,
+            plan: {
+              id: subscription.plan.id,
+              name: subscription.plan.name,
+              display_name: subscription.plan.display_name,
+              plan_type: subscription.plan.plan_type,
+              price: subscription.plan.price,
+            },
+          }
+        : null,
+    };
+  }
+
+  async updateUser(id: number, updateUserDto: UpdateUserDto) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    Object.assign(user, updateUserDto);
+    const saved = await this.userRepository.save(user);
+
+    return {
+      id: saved.id,
+      username: saved.username,
+      first_name: saved.first_name,
+      last_name: saved.last_name,
+      phone_number: saved.phone_number,
+    };
   }
 
   async findAll(filterDto: UserFilterDto) {
