@@ -16,6 +16,7 @@ import { CampaignModule } from './campaign/campaign.module';
 import { RbacModule } from './rbac/rbac.module';
 import { PlanModule } from './plan/plan.module';
 import { SubscriptionModule } from './subscription/subscription.module';
+import { ContactsModule } from './contacts/contacts.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
     RbacModule,
     PlanModule,
     SubscriptionModule,
+    ContactsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
