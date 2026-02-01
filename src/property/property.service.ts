@@ -1,8 +1,3 @@
-// import { Injectable } from '@nestjs/common';
-
-// @Injectable()
-// export class PropertyService {}
-
 import {
   ConflictException,
   Injectable,
@@ -53,7 +48,14 @@ export class PropertyService {
     return this.propertyRepository.save(property);
   }
   async findAll(filterDto: PropertyFilterDto) {
-    const { search, min_price, max_price, bedrooms, page = 1, limit = 10 } = filterDto;
+    const {
+      search,
+      min_price,
+      max_price,
+      bedrooms,
+      page = 1,
+      limit = 10,
+    } = filterDto;
     const skip = (page - 1) * limit;
 
     const queryBuilder = this.propertyRepository.createQueryBuilder('property');
@@ -69,12 +71,16 @@ export class PropertyService {
 
     // Min price filter
     if (min_price !== undefined) {
-      queryBuilder.andWhere('property.listing_price >= :min_price', { min_price });
+      queryBuilder.andWhere('property.listing_price >= :min_price', {
+        min_price,
+      });
     }
 
     // Max price filter
     if (max_price !== undefined) {
-      queryBuilder.andWhere('property.listing_price <= :max_price', { max_price });
+      queryBuilder.andWhere('property.listing_price <= :max_price', {
+        max_price,
+      });
     }
 
     // Bedrooms filter
@@ -111,20 +117,6 @@ export class PropertyService {
 
     return property;
   }
-
-  // async update(id: number, dto: UpdatePropertyDto): Promise<Property> {
-  //   const property = await this.propertyRepository.findOne({
-  //     where: { id },
-  //   });
-
-  //   if (!property) {
-  //     throw new NotFoundException(`Property with id ${id} not found`);
-  //   }
-
-  //   Object.assign(property, dto);
-
-  //   return this.propertyRepository.save(property);
-  // }
 
   async update(
     id: number,

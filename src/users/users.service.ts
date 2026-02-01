@@ -133,6 +133,16 @@ export class UsersService {
       first_name: user.first_name,
       last_name: user.last_name,
       phone_number: user.phone_number,
+      email: user.email,
+      date_of_birth: user.date_of_birth,
+      gender: user.gender,
+      profile_image: user.profile_image,
+      address_line_1: user.address_line_1,
+      address_line_2: user.address_line_2,
+      city: user.city,
+      state: user.state,
+      country: user.country,
+      zip_code: user.zip_code,
       roles: user.roles.map((r) => r.Name),
       subscription: subscription
         ? {
@@ -170,6 +180,16 @@ export class UsersService {
       first_name: saved.first_name,
       last_name: saved.last_name,
       phone_number: saved.phone_number,
+      email: saved.email,
+      date_of_birth: saved.date_of_birth,
+      gender: saved.gender,
+      profile_image: saved.profile_image,
+      address_line_1: saved.address_line_1,
+      address_line_2: saved.address_line_2,
+      city: saved.city,
+      state: saved.state,
+      country: saved.country,
+      zip_code: saved.zip_code,
     };
   }
 

@@ -36,6 +36,36 @@ export class User {
   phone_number: string;
 
   @Column({ nullable: true })
+  email: string;
+
+  @Column({ nullable: true })
+  date_of_birth: Date;
+
+  @Column({ nullable: true })
+  gender: string;
+
+  @Column({ nullable: true })
+  profile_image: string;
+
+  @Column({ nullable: true })
+  address_line_1: string;
+
+  @Column({ nullable: true })
+  address_line_2: string;
+
+  @Column({ nullable: true })
+  city: string;
+
+  @Column({ nullable: true })
+  state: string;
+
+  @Column({ nullable: true })
+  country: string;
+
+  @Column({ nullable: true })
+  zip_code: string;
+
+  @Column({ nullable: true })
   refreshTokenHash: string;
 
   @CreateDateColumn()

@@ -6,8 +6,15 @@ import {
   Body,
   Query,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
+  Req,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiOperation, ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { UsersService } from './users.service';
 import { UserFilterDto } from './dto/user-filter.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -44,10 +51,65 @@ export class UsersController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update user by ID' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        first_name: { type: 'string' },
+        last_name: { type: 'string' },
+        phone_number: { type: 'string' },
+        email: { type: 'string' },
+        date_of_birth: { type: 'string', format: 'date' },
+        gender: { type: 'string' },
+        address_line_1: { type: 'string' },
+        address_line_2: { type: 'string' },
+        city: { type: 'string' },
+        state: { type: 'string' },
+        country: { type: 'string' },
+        zip_code: { type: 'string' },
+        profile_image: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor('profile_image', {
+      storage: diskStorage({
+        destination: './uploads/users',
+
+        filename: (req, file, cb) => {
+          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(
+            null,
+            file.originalname.split('.')[0] +
+              '-' +
+              uniqueName +
+              extname(file.originalname),
+          );
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+          cb(new Error('Only image files are allowed'), false);
+        } else {
+          cb(null, true);
+        }
+      },
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    }),
+  )
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Req() req: Request,
   ) {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    if (file) {
+      updateUserDto.profile_image = `${baseUrl}/uploads/users/${file.filename}`;
+    }
+
     const user = await this.usersService.updateUser(id, updateUserDto);
 
     return {

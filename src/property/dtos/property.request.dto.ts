@@ -170,13 +170,4 @@ export class CreatePropertyDto {
   @IsOptional()
   @IsString()
   seller_notes?: string;
-
-  // // Images
-  // @ApiProperty({
-  //   example: ['https://img1.jpg', 'https://img2.jpg'],
-  //   isArray: true,
-  // })
-  // @IsArray()
-  // @IsString({ each: true })
-  // images: string[];
 }
