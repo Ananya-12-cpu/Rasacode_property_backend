@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Organization } from '../entities/organization.entity';
 import { User } from '../entities/user.entity';
+import { Role } from '../entities/role.entity';
 import {
   CreateOrganizationDto,
   UpdateOrganizationDto,
@@ -20,6 +21,8 @@ export class OrganizationService {
     private readonly organizationRepository: Repository<Organization>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
 
   async create(dto: CreateOrganizationDto): Promise<Organization> {
@@ -139,6 +142,52 @@ export class OrganizationService {
 
     user.organization = null as any;
     await this.userRepository.save(user);
+  }
+
+  async addRole(organizationId: string, roleId: number): Promise<Role> {
+    const organization = await this.findOne(organizationId);
+
+    const role = await this.roleRepository.findOne({
+      where: { Id: roleId },
+      relations: ['organization'],
+    });
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    if (role.organization && role.organization.id === organizationId) {
+      throw new ConflictException('Role is already assigned to this organization');
+    }
+
+    role.organization = organization;
+    return this.roleRepository.save(role);
+  }
+
+  async removeRole(organizationId: string, roleId: number): Promise<void> {
+    await this.findOne(organizationId);
+
+    const role = await this.roleRepository.findOne({
+      where: { Id: roleId },
+      relations: ['organization'],
+    });
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    if (!role.organization || role.organization.id !== organizationId) {
+      throw new NotFoundException('Role is not assigned to this organization');
+    }
+
+    role.organization = null as any;
+    await this.roleRepository.save(role);
+  }
+
+  async getRoles(organizationId: string): Promise<Role[]> {
+    await this.findOne(organizationId);
+
+    return this.roleRepository.find({
+      where: { organization: { id: organizationId } },
+    });
   }
 
   async getUsers(organizationId: string): Promise<User[]> {

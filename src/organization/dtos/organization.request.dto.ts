@@ -94,6 +94,14 @@ export class AddUserToOrganizationDto {
   user_id: number;
 }
 
+export class AddRoleToOrganizationDto {
+  @ApiProperty({ description: 'Role ID to add to the organization', example: 1 })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  role_id: number;
+}
+
 export class OrganizationFilterDto {
   @ApiPropertyOptional({
     description: 'Search by name, subdomain, domain, or industry',

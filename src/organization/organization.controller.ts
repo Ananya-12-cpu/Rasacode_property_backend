@@ -20,6 +20,7 @@ import {
   UpdateOrganizationDto,
   OrganizationFilterDto,
   AddUserToOrganizationDto,
+  AddRoleToOrganizationDto,
 } from './dtos/organization.request.dto';
 
 @ApiTags('Organizations')
@@ -119,6 +120,44 @@ export class OrganizationController {
     return {
       is_success: true,
       message: 'Organization users fetched successfully',
+      data,
+    };
+  }
+
+  @Post(':id/roles')
+  @ApiOperation({ summary: 'Add a role to an organization' })
+  async addRole(
+    @Param('id') id: string,
+    @Body() dto: AddRoleToOrganizationDto,
+  ) {
+    const data = await this.organizationService.addRole(id, dto.role_id);
+    return {
+      is_success: true,
+      message: 'Role added to organization successfully',
+      data,
+    };
+  }
+
+  @Delete(':id/roles/:roleId')
+  @ApiOperation({ summary: 'Remove a role from an organization' })
+  async removeRole(
+    @Param('id') id: string,
+    @Param('roleId', ParseIntPipe) roleId: number,
+  ) {
+    await this.organizationService.removeRole(id, roleId);
+    return {
+      is_success: true,
+      message: 'Role removed from organization successfully',
+    };
+  }
+
+  @Get(':id/roles')
+  @ApiOperation({ summary: 'Get all roles in an organization' })
+  async getRoles(@Param('id') id: string) {
+    const data = await this.organizationService.getRoles(id);
+    return {
+      is_success: true,
+      message: 'Organization roles fetched successfully',
       data,
     };
   }
