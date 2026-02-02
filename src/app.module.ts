@@ -17,6 +17,7 @@ import { RbacModule } from './rbac/rbac.module';
 import { PlanModule } from './plan/plan.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { ContactsModule } from './contacts/contacts.module';
+import { OrganizationModule } from './organization/organization.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ContactsModule } from './contacts/contacts.module';
     PlanModule,
     SubscriptionModule,
     ContactsModule,
+    OrganizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
