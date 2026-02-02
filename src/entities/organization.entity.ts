@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { User } from './user.entity';
 
 @Entity({ schema: 'dbo', name: 'organizations' })
 export class Organization {
@@ -40,4 +42,7 @@ export class Organization {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @OneToMany(() => User, (user) => user.organization)
+  users: User[];
 }

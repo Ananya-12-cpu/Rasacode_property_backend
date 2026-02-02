@@ -86,6 +86,14 @@ export class UpdateOrganizationDto {
   status?: string;
 }
 
+export class AddUserToOrganizationDto {
+  @ApiProperty({ description: 'User ID to add to the organization', example: 1 })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  user_id: number;
+}
+
 export class OrganizationFilterDto {
   @ApiPropertyOptional({
     description: 'Search by name, subdomain, domain, or industry',

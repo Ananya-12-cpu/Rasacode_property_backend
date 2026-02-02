@@ -111,7 +111,7 @@ export class UsersService {
   async getUserById(id: number) {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['roles'],
+      relations: ['roles', 'organization'],
     });
 
     if (!user) {
@@ -144,6 +144,14 @@ export class UsersService {
       country: user.country,
       zip_code: user.zip_code,
       roles: user.roles.map((r) => r.Name),
+      organization: user.organization
+        ? {
+            id: user.organization.id,
+            name: user.organization.name,
+            subdomain: user.organization.subdomain,
+            domain: user.organization.domain,
+          }
+        : null,
       subscription: subscription
         ? {
             id: subscription.id,

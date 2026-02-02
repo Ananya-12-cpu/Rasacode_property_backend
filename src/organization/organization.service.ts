@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Organization } from '../entities/organization.entity';
+import { User } from '../entities/user.entity';
 import {
   CreateOrganizationDto,
   UpdateOrganizationDto,
@@ -17,6 +18,8 @@ export class OrganizationService {
   constructor(
     @InjectRepository(Organization)
     private readonly organizationRepository: Repository<Organization>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async create(dto: CreateOrganizationDto): Promise<Organization> {
@@ -98,5 +101,52 @@ export class OrganizationService {
   async remove(id: string): Promise<void> {
     const organization = await this.findOne(id);
     await this.organizationRepository.remove(organization);
+  }
+
+  async addUser(organizationId: string, userId: number): Promise<User> {
+    const organization = await this.findOne(organizationId);
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['organization'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.organization && user.organization.id === organizationId) {
+      throw new ConflictException('User is already in this organization');
+    }
+
+    user.organization = organization;
+    return this.userRepository.save(user);
+  }
+
+  async removeUser(organizationId: string, userId: number): Promise<void> {
+    await this.findOne(organizationId);
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['organization'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.organization || user.organization.id !== organizationId) {
+      throw new NotFoundException('User is not in this organization');
+    }
+
+    user.organization = null as any;
+    await this.userRepository.save(user);
+  }
+
+  async getUsers(organizationId: string): Promise<User[]> {
+    await this.findOne(organizationId);
+
+    return this.userRepository.find({
+      where: { organization: { id: organizationId } },
+      relations: ['roles'],
+    });
   }
 }

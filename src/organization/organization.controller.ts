@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -18,6 +19,7 @@ import {
   CreateOrganizationDto,
   UpdateOrganizationDto,
   OrganizationFilterDto,
+  AddUserToOrganizationDto,
 } from './dtos/organization.request.dto';
 
 @ApiTags('Organizations')
@@ -80,6 +82,44 @@ export class OrganizationController {
     return {
       is_success: true,
       message: 'Organization deleted successfully',
+    };
+  }
+
+  @Post(':id/users')
+  @ApiOperation({ summary: 'Add a user to an organization' })
+  async addUser(
+    @Param('id') id: string,
+    @Body() dto: AddUserToOrganizationDto,
+  ) {
+    const data = await this.organizationService.addUser(id, dto.user_id);
+    return {
+      is_success: true,
+      message: 'User added to organization successfully',
+      data,
+    };
+  }
+
+  @Delete(':id/users/:userId')
+  @ApiOperation({ summary: 'Remove a user from an organization' })
+  async removeUser(
+    @Param('id') id: string,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    await this.organizationService.removeUser(id, userId);
+    return {
+      is_success: true,
+      message: 'User removed from organization successfully',
+    };
+  }
+
+  @Get(':id/users')
+  @ApiOperation({ summary: 'Get all users in an organization' })
+  async getUsers(@Param('id') id: string) {
+    const data = await this.organizationService.getUsers(id);
+    return {
+      is_success: true,
+      message: 'Organization users fetched successfully',
+      data,
     };
   }
 }

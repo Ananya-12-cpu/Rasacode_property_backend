@@ -3,6 +3,8 @@ import {
   Column,
   PrimaryGeneratedColumn,
   ManyToMany,
+  ManyToOne,
+  JoinColumn,
   JoinTable,
   CreateDateColumn,
   UpdateDateColumn,
@@ -11,6 +13,7 @@ import {
 
 import { Role } from './role.entity';
 import { UserPropertyLike } from './user-property-likes.entity';
+import { Organization } from './organization.entity';
 
 @Entity({ schema: 'dbo', name: 'Users' })
 export class User {
@@ -80,4 +83,11 @@ export class User {
   @ManyToMany(() => Role)
   @JoinTable()
   roles: Role[];
+
+  @ManyToOne(() => Organization, (organization) => organization.users, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 }
