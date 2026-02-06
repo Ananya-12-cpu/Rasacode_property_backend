@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -36,6 +37,7 @@ export class SubscriptionService {
   async create(dto: CreateSubscriptionDto): Promise<UserSubscription> {
     const user = await this.userRepository.findOne({
       where: { id: dto.user_id },
+      relations: ['organization'],
     });
 
     if (!user) {
@@ -49,6 +51,16 @@ export class SubscriptionService {
 
     if (!plan) {
       throw new NotFoundException(`Plan with ID ${dto.plan_id} not found`);
+    }
+
+    // Check if user belongs to the plan's organization
+    if (plan.organization_id) {
+      const userOrgId = user.organization?.id;
+      if (!userOrgId || userOrgId !== plan.organization_id) {
+        throw new ForbiddenException(
+          'You are not attached to this organization and cannot subscribe to its plan',
+        );
+      }
     }
 
     // Check if user already has an active subscription
