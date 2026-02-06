@@ -20,7 +20,6 @@ import {
   UpdateOrganizationDto,
   OrganizationFilterDto,
   AddUserToOrganizationDto,
-  AddRoleToOrganizationDto,
 } from './dtos/organization.request.dto';
 
 @ApiTags('Organizations')
@@ -124,30 +123,28 @@ export class OrganizationController {
     };
   }
 
-  @Post(':id/roles')
-  @ApiOperation({ summary: 'Add a role to an organization' })
-  async addRole(
+  @Delete(':id/plans/:planId')
+  @ApiOperation({ summary: 'Remove a plan from an organization' })
+  async removePlan(
     @Param('id') id: string,
-    @Body() dto: AddRoleToOrganizationDto,
+    @Param('planId', ParseIntPipe) planId: number,
   ) {
-    const data = await this.organizationService.addRole(id, dto.role_id);
+    await this.organizationService.removePlan(id, planId);
     return {
       is_success: true,
-      message: 'Role added to organization successfully',
-      data,
+      message: 'Plan removed from organization successfully',
     };
   }
 
-  @Delete(':id/roles/:roleId')
-  @ApiOperation({ summary: 'Remove a role from an organization' })
-  async removeRole(
-    @Param('id') id: string,
-    @Param('roleId', ParseIntPipe) roleId: number,
-  ) {
-    await this.organizationService.removeRole(id, roleId);
+  @Get(':id/plans')
+  @Roles()
+  @ApiOperation({ summary: 'Get all plans in an organization' })
+  async getPlans(@Param('id') id: string) {
+    const data = await this.organizationService.getPlans(id);
     return {
       is_success: true,
-      message: 'Role removed from organization successfully',
+      message: 'Organization plans fetched successfully',
+      data,
     };
   }
 

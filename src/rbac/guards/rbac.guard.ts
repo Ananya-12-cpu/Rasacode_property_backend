@@ -34,7 +34,7 @@ export class RbacGuard implements CanActivate {
     );
 
     // If no permission or role requirement, allow access
-    if (!permissionRequirement && !requiredRoles) {
+    if (!permissionRequirement && (!requiredRoles || requiredRoles.length === 0)) {
       return true;
     }
 
@@ -46,7 +46,7 @@ export class RbacGuard implements CanActivate {
     }
 
     // Check role-based access
-    if (requiredRoles) {
+    if (requiredRoles && requiredRoles.length > 0) {
       const userRoles = user.roles?.map((role: any) => role.Name) || [];
       const hasRole = requiredRoles.some((role) => userRoles.includes(role));
 

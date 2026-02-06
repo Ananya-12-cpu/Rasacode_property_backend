@@ -31,6 +31,15 @@ export class CreateRoleDto {
   role_title?: string;
 
   @ApiProperty({
+    description: 'The ID of the organization this role belongs to',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    type: String,
+  })
+  @IsString()
+  @IsNotEmpty()
+  organization_id: string;
+
+  @ApiProperty({
     description: 'Array of permission structures for different resources',
     type: [PermissionStructureDto],
     example: [

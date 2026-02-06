@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Role } from '../entities/role.entity';
 import { Permission } from '../entities/permission.entity';
 import { User } from '../entities/user.entity';
+import { Organization } from '../entities/organization.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 
@@ -20,15 +21,31 @@ export class RbacService {
     private permissionRepository: Repository<Permission>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Organization)
+    private organizationRepository: Repository<Organization>,
   ) {}
 
   async createRole(createRoleDto: CreateRoleDto): Promise<Role> {
+    // Verify organization exists
+    const organization = await this.organizationRepository.findOne({
+      where: { id: createRoleDto.organization_id },
+    });
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    // Check for duplicate role name within the organization
     const existingRole = await this.roleRepository.findOne({
-      where: { Name: createRoleDto.role },
+      where: {
+        Name: createRoleDto.role,
+        organization: { id: createRoleDto.organization_id },
+      },
     });
 
     if (existingRole) {
-      throw new ConflictException('Role already exists');
+      throw new ConflictException(
+        'Role already exists in this organization',
+      );
     }
 
     // Auto-generate role_title from role name if not provided
@@ -43,6 +60,7 @@ export class RbacService {
     const role = this.roleRepository.create({
       Name: createRoleDto.role,
       role_title: roleTitle,
+      organization: organization,
     });
 
     const savedRole = await this.roleRepository.save(role);
@@ -59,16 +77,21 @@ export class RbacService {
     return this.findRoleById(savedRole.Id);
   }
 
-  async findAllRoles(): Promise<Role[]> {
+  async findAllRoles(organizationId?: string): Promise<Role[]> {
+    const whereClause: any = {};
+    if (organizationId) {
+      whereClause.organization = { id: organizationId };
+    }
     return this.roleRepository.find({
-      relations: ['permissions'],
+      where: whereClause,
+      relations: ['permissions', 'organization'],
     });
   }
 
   async findRoleById(id: number): Promise<Role> {
     const role = await this.roleRepository.findOne({
       where: { Id: id },
-      relations: ['permissions'],
+      relations: ['permissions', 'organization'],
     });
 
     if (!role) {
@@ -78,10 +101,14 @@ export class RbacService {
     return role;
   }
 
-  async findRoleByName(name: string): Promise<Role> {
+  async findRoleByName(name: string, organizationId?: string): Promise<Role> {
+    const whereClause: any = { Name: name };
+    if (organizationId) {
+      whereClause.organization = { id: organizationId };
+    }
     const role = await this.roleRepository.findOne({
-      where: { Name: name },
-      relations: ['permissions'],
+      where: whereClause,
+      relations: ['permissions', 'organization'],
     });
 
     if (!role) {
@@ -95,12 +122,18 @@ export class RbacService {
     const role = await this.findRoleById(id);
 
     if (updateRoleDto.role) {
+      // Check uniqueness within the same organization
       const existingRole = await this.roleRepository.findOne({
-        where: { Name: updateRoleDto.role },
+        where: {
+          Name: updateRoleDto.role,
+          organization: { id: role.organization?.id },
+        },
       });
 
       if (existingRole && existingRole.Id !== id) {
-        throw new ConflictException('Role name already exists');
+        throw new ConflictException(
+          'Role name already exists in this organization',
+        );
       }
 
       role.Name = updateRoleDto.role;

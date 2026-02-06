@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { Role } from './role.entity';
+import { Plan } from './plan.entity';
 
 @Entity({ schema: 'dbo', name: 'organizations' })
 export class Organization {
@@ -49,4 +50,7 @@ export class Organization {
 
   @OneToMany(() => Role, (role) => role.organization)
   roles: Role[];
+
+  @OneToMany(() => Plan, (plan) => plan.organization)
+  plans: Plan[];
 }

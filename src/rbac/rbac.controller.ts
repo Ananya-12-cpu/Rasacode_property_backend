@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,6 +17,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { RbacService } from './rbac.service';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -48,6 +50,7 @@ export class RbacController {
         description: 'Limited permissions for regular users',
         value: {
           role: 'user',
+          organization_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           permission: [
             {
               campaign: {
@@ -71,6 +74,7 @@ export class RbacController {
         description: 'Full permissions for administrators',
         value: {
           role: 'super_admin',
+          organization_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           permission: [
             {
               campaign: {
@@ -94,6 +98,7 @@ export class RbacController {
         description: 'Partial permissions for managers',
         value: {
           role: 'manager',
+          organization_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           permission: [
             {
               campaign: {
@@ -229,8 +234,14 @@ export class RbacController {
     status: 403,
     description: 'Forbidden - User does not have super_admin role',
   })
-  findAll() {
-    return this.rbacService.findAllRoles();
+  @ApiQuery({
+    name: 'organization_id',
+    required: false,
+    type: String,
+    description: 'Filter roles by organization ID',
+  })
+  findAll(@Query('organization_id') organizationId?: string) {
+    return this.rbacService.findAllRoles(organizationId);
   }
 
   @Get('roles/:id')
