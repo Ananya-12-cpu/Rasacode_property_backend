@@ -7,8 +7,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Plan } from '../entities/plan.entity';
 import { Role } from '../entities/role.entity';
+import { Organization } from '../entities/organization.entity';
+import { UserSubscription } from '../entities/user-subscription.entity';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
+import { PlanFilterDto } from './dto/plan-filter.dto';
 
 @Injectable()
 export class PlanService {
@@ -17,6 +20,10 @@ export class PlanService {
     private readonly planRepository: Repository<Plan>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(Organization)
+    private readonly organizationRepository: Repository<Organization>,
+    @InjectRepository(UserSubscription)
+    private readonly subscriptionRepository: Repository<UserSubscription>,
   ) {}
 
   async create(createPlanDto: CreatePlanDto): Promise<Plan> {
@@ -40,6 +47,16 @@ export class PlanService {
       );
     }
 
+    // Verify organization exists
+    const organization = await this.organizationRepository.findOne({
+      where: { id: createPlanDto.organization_id },
+    });
+    if (!organization) {
+      throw new NotFoundException(
+        `Organization with ID ${createPlanDto.organization_id} not found`,
+      );
+    }
+
     // Auto-generate display_name if not provided
     const displayName =
       createPlanDto.display_name ||
@@ -52,22 +69,57 @@ export class PlanService {
       ...createPlanDto,
       display_name: displayName,
       role,
+      organization,
     });
 
     return this.planRepository.save(plan);
   }
 
-  async findAll(): Promise<Plan[]> {
-    return this.planRepository.find({
-      relations: ['role', 'role.permissions'],
-      order: { price: 'ASC' },
-    });
+  async findAll(filterDto: PlanFilterDto) {
+    const { search, organization_id, page = 1, limit = 10 } = filterDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.planRepository
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.role', 'role')
+      .leftJoinAndSelect('role.permissions', 'permissions')
+      .leftJoinAndSelect('plan.organization', 'organization');
+
+    if (search && search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.andWhere(
+        '(plan.name LIKE :search OR plan.display_name LIKE :search OR plan.description LIKE :search)',
+        { search: searchTerm },
+      );
+    }
+
+    if (organization_id) {
+      queryBuilder.andWhere('plan.organization_id = :organization_id', {
+        organization_id,
+      });
+    }
+
+    const [data, total] = await queryBuilder
+      .orderBy('plan.price', 'ASC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findActive(): Promise<Plan[]> {
     return this.planRepository.find({
       where: { is_active: true },
-      relations: ['role', 'role.permissions'],
+      relations: ['role', 'role.permissions', 'organization'],
       order: { price: 'ASC' },
     });
   }
@@ -75,7 +127,7 @@ export class PlanService {
   async findOne(id: number): Promise<Plan> {
     const plan = await this.planRepository.findOne({
       where: { id },
-      relations: ['role', 'role.permissions'],
+      relations: ['role', 'role.permissions', 'organization'],
     });
 
     if (!plan) {
@@ -88,7 +140,7 @@ export class PlanService {
   async findByPlanType(planType: string): Promise<Plan> {
     const plan = await this.planRepository.findOne({
       where: { plan_type: planType as any, is_active: true },
-      relations: ['role', 'role.permissions'],
+      relations: ['role', 'role.permissions', 'organization'],
     });
 
     if (!plan) {
@@ -134,6 +186,18 @@ export class PlanService {
 
   async remove(id: number): Promise<{ message: string }> {
     const plan = await this.findOne(id);
+
+    // Check for existing subscriptions
+    const subscriptionCount = await this.subscriptionRepository.count({
+      where: { plan_id: id },
+    });
+
+    if (subscriptionCount > 0) {
+      throw new ConflictException(
+        `Cannot delete plan. ${subscriptionCount} subscription(s) are using this plan. Consider deactivating the plan instead.`,
+      );
+    }
+
     await this.planRepository.remove(plan);
     return { message: 'Plan deleted successfully' };
   }

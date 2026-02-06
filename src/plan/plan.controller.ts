@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -17,6 +18,7 @@ import {
 import { PlanService } from './plan.service';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
+import { PlanFilterDto } from './dto/plan-filter.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RbacGuard } from '../rbac/guards/rbac.guard';
 import { Roles } from '../rbac/decorators/roles.decorator';
@@ -45,16 +47,14 @@ export class PlanController {
 
   // Get all plans (Super Admin only)
   @Get()
-  // @UseGuards(JwtAuthGuard, RbacGuard)
-  // @Roles('super_admin')
-  // @ApiBearerAuth()
-  // @ApiOperation({ summary: 'Get all subscription plans (Super Admin only)' })
-  async findAll() {
-    const plans = await this.planService.findAll();
+  @ApiOperation({ summary: 'Get all subscription plans with pagination' })
+  async findAll(@Query() filterDto: PlanFilterDto) {
+    const result = await this.planService.findAll(filterDto);
     return {
       is_success: true,
       message: 'Plans fetched successfully',
-      data: plans,
+      data: result.data,
+      pagination: result.pagination,
     };
   }
 

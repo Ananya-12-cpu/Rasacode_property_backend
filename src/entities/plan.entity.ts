@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Role } from './role.entity';
+import { Organization } from './organization.entity';
 
 export enum PlanType {
   BASIC = 'basic',
@@ -36,7 +37,8 @@ export class Plan {
   billing_cycle: string; // monthly, yearly
 
   @Column({ type: 'varchar', length: 20 })
-  plan_type: PlanType;
+  // plan_type: PlanType;
+  plan_type: string;
 
   @ManyToOne(() => Role, { eager: true })
   @JoinColumn({ name: 'role_id' })
@@ -44,6 +46,13 @@ export class Plan {
 
   @Column()
   role_id: number;
+
+  @ManyToOne(() => Organization, { nullable: true, onDelete: 'NO ACTION' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
+
+  @Column({ nullable: true })
+  organization_id: string;
 
   @Column({ default: true })
   is_active: boolean;
