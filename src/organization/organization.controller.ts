@@ -9,6 +9,8 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -139,7 +141,13 @@ export class OrganizationController {
   @Get(':id/plans')
   @Roles()
   @ApiOperation({ summary: 'Get all plans in an organization' })
-  async getPlans(@Param('id') id: string) {
+  async getPlans(@Param('id') id: string, @Request() req: any) {
+    const userOrgId = req.user?.organization_id;
+    if (!userOrgId || userOrgId !== id) {
+      throw new ForbiddenException(
+        'You are not attached to this organization',
+      );
+    }
     const data = await this.organizationService.getPlans(id);
     return {
       is_success: true,

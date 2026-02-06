@@ -94,6 +94,13 @@ export class UsersService {
     });
   }
 
+  async findByIdWithOrganization(id: number): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles', 'roles.permissions', 'organization'],
+    });
+  }
+
   async setRefreshTokenHash(userId: number, hash: string | null) {
     const user = await this.findById(userId);
     if (!user) return null;
