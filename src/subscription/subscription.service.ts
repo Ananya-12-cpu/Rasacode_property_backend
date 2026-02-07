@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +13,7 @@ import {
 import { User } from '../entities/user.entity';
 import { Plan } from '../entities/plan.entity';
 import { Role } from '../entities/role.entity';
+import { Organization } from '../entities/organization.entity';
 import {
   CreateSubscriptionDto,
   UpdateSubscriptionStatusDto,
@@ -31,6 +31,8 @@ export class SubscriptionService {
     private readonly planRepository: Repository<Plan>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(Organization)
+    private readonly organizationRepository: Repository<Organization>,
   ) {}
 
   // Create a new subscription (pending payment)
@@ -53,13 +55,17 @@ export class SubscriptionService {
       throw new NotFoundException(`Plan with ID ${dto.plan_id} not found`);
     }
 
-    // Check if user belongs to the plan's organization
+    // Auto-assign user to the plan's organization
     if (plan.organization_id) {
       const userOrgId = user.organization?.id;
       if (!userOrgId || userOrgId !== plan.organization_id) {
-        throw new ForbiddenException(
-          'You are not attached to this organization and cannot subscribe to its plan',
-        );
+        const organization = await this.organizationRepository.findOne({
+          where: { id: plan.organization_id },
+        });
+        if (organization) {
+          user.organization = organization;
+          await this.userRepository.save(user);
+        }
       }
     }
 

@@ -8,40 +8,40 @@ export class CreateOrganizationDto {
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ example: 'acme' })
-  @IsOptional()
-  @IsString()
-  subdomain?: string;
+  // @ApiPropertyOptional({ example: 'acme' })
+  // @IsOptional()
+  // @IsString()
+  // subdomain?: string;
 
-  @ApiPropertyOptional({ example: 'acme.com' })
-  @IsOptional()
-  @IsString()
-  domain?: string;
+  // @ApiPropertyOptional({ example: 'acme.com' })
+  // @IsOptional()
+  // @IsString()
+  // domain?: string;
 
   @ApiPropertyOptional({ example: 'Real Estate' })
   @IsOptional()
   @IsString()
   industry?: string;
 
-  @ApiPropertyOptional({ example: '50-100' })
-  @IsOptional()
-  @IsString()
-  size?: string;
+  // @ApiPropertyOptional({ example: '50-100' })
+  // @IsOptional()
+  // @IsString()
+  // size?: string;
 
   @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
   @IsOptional()
   @IsString()
   logo_url?: string;
 
-  @ApiPropertyOptional({ example: '{}' })
-  @IsOptional()
-  @IsString()
-  settings?: string;
+  // @ApiPropertyOptional({ example: '{}' })
+  // @IsOptional()
+  // @IsString()
+  // settings?: string;
 
-  @ApiPropertyOptional({ example: 'active' })
-  @IsOptional()
-  @IsString()
-  status?: string;
+  // @ApiPropertyOptional({ example: 'active' })
+  // @IsOptional()
+  // @IsString()
+  // status?: string;
 }
 
 export class UpdateOrganizationDto {
@@ -50,44 +50,47 @@ export class UpdateOrganizationDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ example: 'acme' })
-  @IsOptional()
-  @IsString()
-  subdomain?: string;
+  // @ApiPropertyOptional({ example: 'acme' })
+  // @IsOptional()
+  // @IsString()
+  // subdomain?: string;
 
-  @ApiPropertyOptional({ example: 'acme.com' })
-  @IsOptional()
-  @IsString()
-  domain?: string;
+  // @ApiPropertyOptional({ example: 'acme.com' })
+  // @IsOptional()
+  // @IsString()
+  // domain?: string;
 
   @ApiPropertyOptional({ example: 'Real Estate' })
   @IsOptional()
   @IsString()
   industry?: string;
 
-  @ApiPropertyOptional({ example: '50-100' })
-  @IsOptional()
-  @IsString()
-  size?: string;
+  // @ApiPropertyOptional({ example: '50-100' })
+  // @IsOptional()
+  // @IsString()
+  // size?: string;
 
   @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
   @IsOptional()
   @IsString()
   logo_url?: string;
 
-  @ApiPropertyOptional({ example: '{}' })
-  @IsOptional()
-  @IsString()
-  settings?: string;
+  // @ApiPropertyOptional({ example: '{}' })
+  // @IsOptional()
+  // @IsString()
+  // settings?: string;
 
-  @ApiPropertyOptional({ example: 'active' })
-  @IsOptional()
-  @IsString()
-  status?: string;
+  // @ApiPropertyOptional({ example: 'active' })
+  // @IsOptional()
+  // @IsString()
+  // status?: string;
 }
 
 export class AddUserToOrganizationDto {
-  @ApiProperty({ description: 'User ID to add to the organization', example: 1 })
+  @ApiProperty({
+    description: 'User ID to add to the organization',
+    example: 1,
+  })
   @IsNotEmpty()
   @Type(() => Number)
   @IsInt()

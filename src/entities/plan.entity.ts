@@ -52,7 +52,7 @@ export class Plan {
   organization: Organization;
 
   @Column({ nullable: true })
-  organization_id: string;
+  organization_id: number;
 
   @Column({ default: true })
   is_active: boolean;

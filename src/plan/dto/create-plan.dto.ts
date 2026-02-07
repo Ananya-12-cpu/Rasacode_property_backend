@@ -70,11 +70,11 @@ export class CreatePlanDto {
 
   @ApiProperty({
     description: 'Organization ID this plan belongs to',
-    example: 'uuid-here',
+    example: 1,
   })
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  organization_id: string;
+  organization_id: number;
 
   @ApiPropertyOptional({
     description: 'Whether the plan is active',

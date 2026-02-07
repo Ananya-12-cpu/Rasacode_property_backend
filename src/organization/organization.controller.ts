@@ -57,7 +57,7 @@ export class OrganizationController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get organization by ID' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.organizationService.findOne(id);
     return {
       is_success: true,
@@ -68,7 +68,10 @@ export class OrganizationController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update organization by ID' })
-  async update(@Param('id') id: string, @Body() dto: UpdateOrganizationDto) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateOrganizationDto,
+  ) {
     const data = await this.organizationService.update(id, dto);
     return {
       is_success: true,
@@ -79,7 +82,7 @@ export class OrganizationController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete organization by ID' })
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id', ParseIntPipe) id: number) {
     await this.organizationService.remove(id);
     return {
       is_success: true,
@@ -90,7 +93,7 @@ export class OrganizationController {
   @Post(':id/users')
   @ApiOperation({ summary: 'Add a user to an organization' })
   async addUser(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: AddUserToOrganizationDto,
   ) {
     const data = await this.organizationService.addUser(id, dto.user_id);
@@ -104,7 +107,7 @@ export class OrganizationController {
   @Delete(':id/users/:userId')
   @ApiOperation({ summary: 'Remove a user from an organization' })
   async removeUser(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Param('userId', ParseIntPipe) userId: number,
   ) {
     await this.organizationService.removeUser(id, userId);
@@ -116,7 +119,7 @@ export class OrganizationController {
 
   @Get(':id/users')
   @ApiOperation({ summary: 'Get all users in an organization' })
-  async getUsers(@Param('id') id: string) {
+  async getUsers(@Param('id', ParseIntPipe) id: number) {
     const data = await this.organizationService.getUsers(id);
     return {
       is_success: true,
@@ -128,7 +131,7 @@ export class OrganizationController {
   @Delete(':id/plans/:planId')
   @ApiOperation({ summary: 'Remove a plan from an organization' })
   async removePlan(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Param('planId', ParseIntPipe) planId: number,
   ) {
     await this.organizationService.removePlan(id, planId);
@@ -141,12 +144,10 @@ export class OrganizationController {
   @Get(':id/plans')
   @Roles()
   @ApiOperation({ summary: 'Get all plans in an organization' })
-  async getPlans(@Param('id') id: string, @Request() req: any) {
+  async getPlans(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
     const userOrgId = req.user?.organization_id;
     if (!userOrgId || userOrgId !== id) {
-      throw new ForbiddenException(
-        'You are not attached to this organization',
-      );
+      throw new ForbiddenException('You are not attached to this organization');
     }
     const data = await this.organizationService.getPlans(id);
     return {
@@ -158,7 +159,7 @@ export class OrganizationController {
 
   @Get(':id/roles')
   @ApiOperation({ summary: 'Get all roles in an organization' })
-  async getRoles(@Param('id') id: string) {
+  async getRoles(@Param('id', ParseIntPipe) id: number) {
     const data = await this.organizationService.getRoles(id);
     return {
       is_success: true,

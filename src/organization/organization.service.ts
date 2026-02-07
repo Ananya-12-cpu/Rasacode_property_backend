@@ -29,13 +29,13 @@ export class OrganizationService {
   ) {}
 
   async create(dto: CreateOrganizationDto): Promise<Organization> {
-    if (dto.subdomain) {
+    if (dto.name) {
       const exists = await this.organizationRepository.findOne({
-        where: { subdomain: dto.subdomain },
+        where: { name: dto.name },
       });
       if (exists) {
         throw new ConflictException(
-          'Organization with this subdomain already exists',
+          'Organization with this name already exists',
         );
       }
     }
@@ -77,7 +77,7 @@ export class OrganizationService {
     };
   }
 
-  async findOne(id: string): Promise<Organization> {
+  async findOne(id: number): Promise<Organization> {
     const organization = await this.organizationRepository.findOne({
       where: { id },
       relations: ['plans'],
@@ -88,16 +88,16 @@ export class OrganizationService {
     return organization;
   }
 
-  async update(id: string, dto: UpdateOrganizationDto): Promise<Organization> {
+  async update(id: number, dto: UpdateOrganizationDto): Promise<Organization> {
     const organization = await this.findOne(id);
 
-    if (dto.subdomain && dto.subdomain !== organization.subdomain) {
+    if (dto.name && dto.name !== organization.name) {
       const exists = await this.organizationRepository.findOne({
-        where: { subdomain: dto.subdomain },
+        where: { name: dto.name },
       });
       if (exists) {
         throw new ConflictException(
-          'Organization with this subdomain already exists',
+          'Organization with this name already exists',
         );
       }
     }
@@ -106,12 +106,12 @@ export class OrganizationService {
     return this.organizationRepository.save(organization);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: number): Promise<void> {
     const organization = await this.findOne(id);
     await this.organizationRepository.remove(organization);
   }
 
-  async addUser(organizationId: string, userId: number): Promise<User> {
+  async addUser(organizationId: number, userId: number): Promise<User> {
     const organization = await this.findOne(organizationId);
 
     const user = await this.userRepository.findOne({
@@ -130,7 +130,7 @@ export class OrganizationService {
     return this.userRepository.save(user);
   }
 
-  async removeUser(organizationId: string, userId: number): Promise<void> {
+  async removeUser(organizationId: number, userId: number): Promise<void> {
     await this.findOne(organizationId);
 
     const user = await this.userRepository.findOne({
@@ -149,7 +149,7 @@ export class OrganizationService {
     await this.userRepository.save(user);
   }
 
-  async getRoles(organizationId: string): Promise<Role[]> {
+  async getRoles(organizationId: number): Promise<Role[]> {
     await this.findOne(organizationId);
 
     return this.roleRepository.find({
@@ -158,7 +158,7 @@ export class OrganizationService {
     });
   }
 
-  async removePlan(organizationId: string, planId: number): Promise<void> {
+  async removePlan(organizationId: number, planId: number): Promise<void> {
     await this.findOne(organizationId);
 
     const plan = await this.planRepository.findOne({
@@ -171,7 +171,7 @@ export class OrganizationService {
     await this.planRepository.remove(plan);
   }
 
-  async getPlans(organizationId: string): Promise<Plan[]> {
+  async getPlans(organizationId: number): Promise<Plan[]> {
     await this.findOne(organizationId);
 
     return this.planRepository.find({
@@ -180,7 +180,7 @@ export class OrganizationService {
     });
   }
 
-  async getUsers(organizationId: string): Promise<User[]> {
+  async getUsers(organizationId: number): Promise<User[]> {
     await this.findOne(organizationId);
 
     return this.userRepository.find({

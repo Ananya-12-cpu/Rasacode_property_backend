@@ -10,8 +10,8 @@ export class PlanFilterDto {
 
   @ApiPropertyOptional({ description: 'Filter by organization ID' })
   @IsOptional()
-  @IsString()
-  organization_id?: string;
+  @Type(() => Number)
+  organization_id?: number;
 
   @ApiPropertyOptional({ description: 'Page number', default: 1 })
   @IsOptional()

@@ -83,7 +83,7 @@ export class UsersService {
   async findByUsername(username: string): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { username },
-      relations: ['roles', 'roles.permissions'],
+      relations: ['roles', 'roles.permissions', 'organization'],
     });
   }
 
@@ -155,8 +155,8 @@ export class UsersService {
         ? {
             id: user.organization.id,
             name: user.organization.name,
-            subdomain: user.organization.subdomain,
-            domain: user.organization.domain,
+            // subdomain: user.organization.subdomain,
+            // domain: user.organization.domain,
           }
         : null,
       subscription: subscription

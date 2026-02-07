@@ -77,7 +77,7 @@ export class RbacService {
     return this.findRoleById(savedRole.Id);
   }
 
-  async findAllRoles(organizationId?: string): Promise<Role[]> {
+  async findAllRoles(organizationId?: number): Promise<Role[]> {
     const whereClause: any = {};
     if (organizationId) {
       whereClause.organization = { id: organizationId };
@@ -101,7 +101,7 @@ export class RbacService {
     return role;
   }
 
-  async findRoleByName(name: string, organizationId?: string): Promise<Role> {
+  async findRoleByName(name: string, organizationId?: number): Promise<Role> {
     const whereClause: any = { Name: name };
     if (organizationId) {
       whereClause.organization = { id: organizationId };
