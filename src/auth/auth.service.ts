@@ -81,9 +81,6 @@ export class AuthService {
       relations: ['plan', 'plan.role', 'plan.role.permissions'],
     });
 
-    // Only show roles and permissions if user is attached to an organization
-    const hasOrganization = !!user.organization;
-
     return {
       user: {
         id: user.id,
@@ -91,7 +88,10 @@ export class AuthService {
         first_name: user.first_name ?? null,
         last_name: user.last_name ?? null,
         phone_number: user.phone_number ?? null,
-        roles: hasOrganization ? user.roles : [],
+        roles: user.roles?.map((r) => r.Name) ?? [],
+        organization: user.organization
+          ? { id: user.organization.id, name: user.organization.name }
+          : null,
       },
       subscription: subscription
         ? {

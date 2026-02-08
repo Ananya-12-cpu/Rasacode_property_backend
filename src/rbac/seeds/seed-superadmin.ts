@@ -42,7 +42,9 @@ async function seedSuperAdmin() {
     });
 
     if (existingUser) {
-      console.log('Super admin user already exists, updating password and role...');
+      console.log(
+        'Super admin user already exists, updating password and role...',
+      );
       existingUser.passwordHash = await bcrypt.hash('password123', 10);
       existingUser.roles = [superAdminRole];
       await userRepository.save(existingUser);
