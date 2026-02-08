@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   Query,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -34,12 +35,10 @@ export class RbacController {
   constructor(private readonly rbacService: RbacService) {}
 
   @Post('roles')
-  @UseGuards(RolesGuard)
-  @Roles('super_admin')
   @ApiOperation({
     summary: 'Create a new role with permissions',
     description:
-      'Creates a new role with specified permissions for campaign and properties resources. Only accessible by super_admin.',
+      'Creates a new role with specified permissions. Accessible by super_admin or users with user_management.add permission. Non-super_admin users can only create roles in their own organization.',
   })
   @ApiBody({
     type: CreateRoleDto,
@@ -160,7 +159,37 @@ export class RbacController {
     status: 409,
     description: 'Conflict - Role already exists',
   })
-  create(@Body() createRoleDto: CreateRoleDto) {
+  async create(@Body() createRoleDto: CreateRoleDto, @Request() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const user = req.user as {
+      id: number;
+      roles?: { Name: string }[];
+      organization_id?: number;
+    };
+    const userRoles: string[] = user.roles?.map((r) => r.Name) || [];
+    const isSuperAdmin = userRoles.includes('super_admin');
+
+    if (!isSuperAdmin) {
+      const hasPermission = await this.rbacService.checkPermission(
+        user.id,
+        'user_management',
+        'add',
+      );
+      if (!hasPermission) {
+        throw new ForbiddenException(
+          'You do not have permission to create roles',
+        );
+      }
+
+      const creatorOrgId = user.organization_id;
+      if (!creatorOrgId) {
+        throw new ForbiddenException(
+          'You are not attached to any organization',
+        );
+      }
+      createRoleDto.organization_id = creatorOrgId;
+    }
+
     return this.rbacService.createRole(createRoleDto);
   }
 

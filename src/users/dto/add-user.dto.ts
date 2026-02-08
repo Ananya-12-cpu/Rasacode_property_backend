@@ -42,4 +42,12 @@ export class AddUserDto {
   @IsString()
   @IsOptional()
   phone_number?: string;
+
+  @ApiProperty({
+    description: 'Role name to assign to the new user',
+    example: 'manager',
+  })
+  @IsString()
+  @IsNotEmpty()
+  role: string;
 }

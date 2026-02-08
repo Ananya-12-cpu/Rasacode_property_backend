@@ -180,7 +180,7 @@ export class RbacService {
 
   async checkPermission(
     userId: number,
-    resource: 'campaign' | 'properties' | 'user_management',
+    resource: 'campaign' | 'properties' | 'user_management' | 'buyer' | 'seller' | 'broker',
     action: 'add' | 'view' | 'edit' | 'delete',
   ): Promise<boolean> {
     // Query from User side to get their roles and permissions

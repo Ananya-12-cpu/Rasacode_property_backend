@@ -298,6 +298,7 @@ export class UsersService {
     username: string,
     password: string,
     creatorOrganizationId: number,
+    roleName: string,
     first_name?: string,
     last_name?: string,
     phone_number?: string,
@@ -316,6 +317,16 @@ export class UsersService {
       throw new NotFoundException('Organization not found');
     }
 
+    // Find the role scoped to the creator's organization
+    const role = await this.roleRepository.findOne({
+      where: { Name: roleName, organization: { id: creatorOrganizationId } },
+    });
+    if (!role) {
+      throw new NotFoundException(
+        `Role '${roleName}' not found in your organization`,
+      );
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const passwordHash = (await (bcrypt as any).hash(password, 10)) as string;
 
@@ -326,6 +337,7 @@ export class UsersService {
       last_name: last_name ?? null,
       phone_number: phone_number ?? null,
       organization,
+      roles: [role],
     } as unknown as DeepPartial<User>);
 
     const savedUser = await this.userRepository.save(user);
@@ -337,6 +349,7 @@ export class UsersService {
       last_name: savedUser.last_name,
       phone_number: savedUser.phone_number,
       organization_id: creatorOrganizationId,
+      role: role.Name,
     };
   }
 }

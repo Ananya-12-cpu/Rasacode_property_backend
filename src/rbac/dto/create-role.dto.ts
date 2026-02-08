@@ -31,12 +31,14 @@ export class CreateRoleDto {
   role_title?: string;
 
   @ApiProperty({
-    description: 'The ID of the organization this role belongs to',
+    description:
+      'The ID of the organization this role belongs to (optional - auto-assigned from your organization if not provided)',
     example: 1,
     type: Number,
+    required: false,
   })
-  @IsNotEmpty()
-  organization_id: number;
+  @IsOptional()
+  organization_id?: number;
 
   @ApiProperty({
     description: 'Array of permission structures for different resources',

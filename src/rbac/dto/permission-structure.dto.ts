@@ -46,4 +46,49 @@ export class PermissionStructureDto {
   @ValidateNested()
   @Type(() => ResourcePermissionDto)
   user_management?: ResourcePermissionDto;
+
+  @ApiProperty({
+    description: 'Permissions for buyer resource',
+    type: ResourcePermissionDto,
+    required: false,
+    example: {
+      add: false,
+      view: true,
+      edit: false,
+      delete: false,
+    },
+  })
+  @ValidateNested()
+  @Type(() => ResourcePermissionDto)
+  buyer?: ResourcePermissionDto;
+
+  @ApiProperty({
+    description: 'Permissions for seller resource',
+    type: ResourcePermissionDto,
+    required: false,
+    example: {
+      add: false,
+      view: true,
+      edit: false,
+      delete: false,
+    },
+  })
+  @ValidateNested()
+  @Type(() => ResourcePermissionDto)
+  seller?: ResourcePermissionDto;
+
+  @ApiProperty({
+    description: 'Permissions for broker resource',
+    type: ResourcePermissionDto,
+    required: false,
+    example: {
+      add: false,
+      view: true,
+      edit: false,
+      delete: false,
+    },
+  })
+  @ValidateNested()
+  @Type(() => ResourcePermissionDto)
+  broker?: ResourcePermissionDto;
 }

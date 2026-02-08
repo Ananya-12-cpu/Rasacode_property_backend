@@ -46,15 +46,14 @@ export class UsersController {
   async addUser(@Body() dto: AddUserDto, @NestRequest() req: any) {
     const creatorOrgId = req.user?.organization_id;
     if (!creatorOrgId) {
-      throw new ForbiddenException(
-        'You are not attached to any organization',
-      );
+      throw new ForbiddenException('You are not attached to any organization');
     }
 
     const data = await this.usersService.addUser(
       dto.username,
       dto.password,
       creatorOrgId,
+      dto.role,
       dto.first_name,
       dto.last_name,
       dto.phone_number,
