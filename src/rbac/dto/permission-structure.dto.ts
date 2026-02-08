@@ -16,7 +16,7 @@ export class PermissionStructureDto {
   })
   @ValidateNested()
   @Type(() => ResourcePermissionDto)
-  campaign: ResourcePermissionDto;
+  campaign!: ResourcePermissionDto;
 
   @ApiProperty({
     description: 'Permissions for properties resource',
@@ -30,5 +30,20 @@ export class PermissionStructureDto {
   })
   @ValidateNested()
   @Type(() => ResourcePermissionDto)
-  properties: ResourcePermissionDto;
+  properties!: ResourcePermissionDto;
+
+  @ApiProperty({
+    description: 'Permissions for user management resource',
+    type: ResourcePermissionDto,
+    required: false,
+    example: {
+      add: false,
+      view: false,
+      edit: false,
+      delete: false,
+    },
+  })
+  @ValidateNested()
+  @Type(() => ResourcePermissionDto)
+  user_management?: ResourcePermissionDto;
 }

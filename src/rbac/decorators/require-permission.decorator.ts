@@ -1,7 +1,7 @@
 import { SetMetadata } from '@nestjs/common';
 
 export interface PermissionRequirement {
-  resource: 'campaign' | 'properties';
+  resource: 'campaign' | 'properties' | 'user_management';
   action: 'add' | 'view' | 'edit' | 'delete';
 }
 
