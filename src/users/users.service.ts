@@ -6,8 +6,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
+import * as bcrypt from 'bcryptjs';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
+import { Organization } from '../entities/organization.entity';
 import {
   UserSubscription,
   SubscriptionStatus,
@@ -24,6 +26,8 @@ export class UsersService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(UserSubscription)
     private readonly subscriptionRepository: Repository<UserSubscription>,
+    @InjectRepository(Organization)
+    private readonly organizationRepository: Repository<Organization>,
   ) {}
 
   async create(
@@ -225,6 +229,7 @@ export class UsersService {
 
     // Get total count and paginated data
     const [users, total] = await queryBuilder
+      .leftJoinAndSelect('user.organization', 'organization')
       .orderBy('user.id', 'DESC')
       .skip(skip)
       .take(limit)
@@ -257,6 +262,12 @@ export class UsersService {
           first_name: u.first_name,
           last_name: u.last_name,
           phone_number: u.phone_number,
+          organization: u.organization
+            ? {
+                id: u.organization.id,
+                name: u.organization.name,
+              }
+            : null,
           subscription: subscription
             ? {
                 id: subscription.id,
@@ -280,6 +291,52 @@ export class UsersService {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+    };
+  }
+
+  async addUser(
+    username: string,
+    password: string,
+    creatorOrganizationId: number,
+    first_name?: string,
+    last_name?: string,
+    phone_number?: string,
+  ) {
+    const existingUser = await this.userRepository.findOne({
+      where: { username },
+    });
+    if (existingUser) {
+      throw new BadRequestException('User already exists');
+    }
+
+    const organization = await this.organizationRepository.findOne({
+      where: { id: creatorOrganizationId },
+    });
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const passwordHash = (await (bcrypt as any).hash(password, 10)) as string;
+
+    const user = this.userRepository.create({
+      username,
+      passwordHash,
+      first_name: first_name ?? null,
+      last_name: last_name ?? null,
+      phone_number: phone_number ?? null,
+      organization,
+    } as unknown as DeepPartial<User>);
+
+    const savedUser = await this.userRepository.save(user);
+
+    return {
+      id: savedUser.id,
+      username: savedUser.username,
+      first_name: savedUser.first_name,
+      last_name: savedUser.last_name,
+      phone_number: savedUser.phone_number,
+      organization_id: creatorOrganizationId,
     };
   }
 }

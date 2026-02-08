@@ -1,28 +1,71 @@
 import {
   Controller,
   Get,
+  Post,
   Put,
   Param,
   Body,
   Query,
   ParseIntPipe,
   UseInterceptors,
+  UseGuards,
   UploadedFile,
   Req,
+  Request as NestRequest,
+  ForbiddenException,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiOperation, ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiTags,
+  ApiConsumes,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RbacGuard } from '../rbac/guards/rbac.guard';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { UsersService } from './users.service';
 import { UserFilterDto } from './dto/user-filter.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AddUserDto } from './dto/add-user.dto';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @ApiBearerAuth()
+  @RequirePermission({ resource: 'user_management', action: 'add' })
+  @ApiOperation({ summary: 'Add a new user to your organization' })
+  async addUser(@Body() dto: AddUserDto, @NestRequest() req: any) {
+    const creatorOrgId = req.user?.organization_id;
+    if (!creatorOrgId) {
+      throw new ForbiddenException(
+        'You are not attached to any organization',
+      );
+    }
+
+    const data = await this.usersService.addUser(
+      dto.username,
+      dto.password,
+      creatorOrgId,
+      dto.first_name,
+      dto.last_name,
+      dto.phone_number,
+    );
+
+    return {
+      is_success: true,
+      message: 'User added successfully',
+      data,
+    };
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get all users with global search and pagination' })
