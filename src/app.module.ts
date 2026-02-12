@@ -27,12 +27,11 @@ import { OrganizationModule } from './organization/organization.module';
       useFactory: (configService: ConfigService) => {
         return {
           type: 'mssql',
-          host: configService.get<string>('DB_HOST') || 'localhost',
-          port:
-            parseInt(configService.get<string>('DB_PORT') as string) || 1433,
-          username: configService.get<string>('DB_USER') || 'ananyalogin',
-          password: configService.get<string>('DB_PASSWORD') || '123',
-          database: configService.get<string>('DB_NAME') || 'EliteDB',
+          host: configService.get<string>('DB_HOST'),
+          port: parseInt(configService.get<string>('DB_PORT') as string),
+          username: configService.get<string>('DB_USER'),
+          password: configService.get<string>('DB_PASSWORD'),
+          database: configService.get<string>('DB_NAME'),
           autoLoadEntities: true,
           options: {
             trustServerCertificate: true,

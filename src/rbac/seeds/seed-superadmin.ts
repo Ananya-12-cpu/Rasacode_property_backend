@@ -7,11 +7,11 @@ import { Role } from '../../entities/role.entity';
 async function seedSuperAdmin() {
   const dataSource = new DataSource({
     type: 'mssql',
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT as string) || 1433,
-    username: process.env.DB_USER || 'ananyalogin',
-    password: process.env.DB_PASSWORD || '123',
-    database: process.env.DB_NAME || 'EliteDB',
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT as string),
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     entities: ['src/**/*.entity.ts'],
     synchronize: false,
     options: {
