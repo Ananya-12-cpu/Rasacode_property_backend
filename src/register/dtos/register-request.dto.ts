@@ -41,13 +41,4 @@ export class RegisterRequestDto {
   @IsPhoneNumber('IN')
   @IsOptional()
   phone_number?: string;
-
-  @ApiProperty({
-    example: 'super_admin',
-    description: 'Role name to assign to the user (defaults to "user" if not provided)',
-    enum: ['super_admin', 'user', 'manager'],
-  })
-  @IsString()
-  @IsOptional()
-  role?: string;
 }

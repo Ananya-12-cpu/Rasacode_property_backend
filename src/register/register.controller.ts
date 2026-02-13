@@ -30,7 +30,6 @@ export class RegisterController {
           first_name: 'Admin',
           last_name: 'User',
           phone_number: '+919876543210',
-          role: 'super_admin',
         },
       },
       regular_user: {
@@ -43,7 +42,6 @@ export class RegisterController {
           first_name: 'Regular',
           last_name: 'User',
           phone_number: '+919876543210',
-          role: 'user',
         },
       },
       manager: {
@@ -56,7 +54,6 @@ export class RegisterController {
           first_name: 'Manager',
           last_name: 'User',
           phone_number: '+919876543210',
-          role: 'manager',
         },
       },
     },
@@ -73,7 +70,6 @@ export class RegisterController {
           first_name: 'firstname',
           last_name: 'lastname',
           phone_number: '+919876543210',
-          role: 'super_admin',
           tokens: {
             accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
             refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
@@ -81,14 +77,6 @@ export class RegisterController {
         },
       },
     },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - Passwords do not match or User already exists',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Not Found - Specified role does not exist',
   })
   async register(
     @Body()
@@ -104,7 +92,6 @@ export class RegisterController {
         body.first_name,
         body.last_name,
         body.phone_number,
-        body.role,
       );
 
       return plainToInstance(GenericResponseDto, {
@@ -118,11 +105,7 @@ export class RegisterController {
       if (typeof msg === 'string' && msg.includes('User already exists')) {
         throw new BadRequestException('User already exists');
       }
-      if (
-        typeof msg === 'string' &&
-        msg.includes('Role') &&
-        msg.includes('not found')
-      ) {
+      if (typeof msg === 'string' && msg.includes('not found')) {
         throw new BadRequestException(msg);
       }
       throw e;
