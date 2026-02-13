@@ -39,6 +39,12 @@ export async function seedRoles(dataSource: DataSource) {
         edit: true,
         delete: true,
       },
+      user_management: {
+        add: true,
+        view: true,
+        edit: true,
+        delete: true,
+      },
     },
   });
   await permissionRepository.save(superAdminPermission);

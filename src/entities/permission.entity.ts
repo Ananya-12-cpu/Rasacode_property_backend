@@ -11,6 +11,10 @@ export interface ResourcePermission {
 export interface PermissionStructure {
   campaign: ResourcePermission;
   properties: ResourcePermission;
+  user_management?: ResourcePermission;
+  buyer?: ResourcePermission;
+  seller?: ResourcePermission;
+  broker?: ResourcePermission;
 }
 
 @Entity({ schema: 'dbo', name: 'Permissions' })

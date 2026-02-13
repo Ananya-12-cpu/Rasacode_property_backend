@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,6 +12,15 @@ import { User } from '../entities/user.entity';
 import { Organization } from '../entities/organization.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+
+const SUPER_ADMIN_PERMISSIONS = {
+  campaign: { add: true, view: true, edit: true, delete: true },
+  properties: { add: true, view: true, edit: true, delete: true },
+  user_management: { add: true, view: true, edit: true, delete: true },
+  buyer: { add: true, view: true, edit: true, delete: true },
+  seller: { add: true, view: true, edit: true, delete: true },
+  broker: { add: true, view: true, edit: true, delete: true },
+};
 
 @Injectable()
 export class RbacService {
@@ -121,6 +131,12 @@ export class RbacService {
   async updateRole(id: number, updateRoleDto: UpdateRoleDto): Promise<Role> {
     const role = await this.findRoleById(id);
 
+    if (role.Name === 'super_admin') {
+      throw new ForbiddenException(
+        'The super_admin role cannot be modified',
+      );
+    }
+
     if (updateRoleDto.role) {
       // Check uniqueness within the same organization
       const existingRole = await this.roleRepository.findOne({
@@ -175,6 +191,13 @@ export class RbacService {
 
   async deleteRole(id: number): Promise<void> {
     const role = await this.findRoleById(id);
+
+    if (role.Name === 'super_admin') {
+      throw new ForbiddenException(
+        'The super_admin role cannot be deleted',
+      );
+    }
+
     await this.roleRepository.remove(role);
   }
 
@@ -193,6 +216,12 @@ export class RbacService {
 
     if (!user || !user.roles || user.roles.length === 0) {
       return false;
+    }
+
+    // Super admin has all permissions
+    const isSuperAdmin = user.roles.some((r) => r.Name === 'super_admin');
+    if (isSuperAdmin) {
+      return true;
     }
 
     // Check if user has the required permission
@@ -222,10 +251,21 @@ export class RbacService {
       return [];
     }
 
-    return user.roles.map((role) => ({
-      role: role.Name,
-      role_title: role.role_title,
-      permissions: role.permissions.map((p) => p.permissions),
-    }));
+    return user.roles.map((role) => {
+      // Super admin always gets full permissions
+      if (role.Name === 'super_admin') {
+        return {
+          role: role.Name,
+          role_title: role.role_title,
+          permissions: [SUPER_ADMIN_PERMISSIONS],
+        };
+      }
+
+      return {
+        role: role.Name,
+        role_title: role.role_title,
+        permissions: role.permissions.map((p) => p.permissions),
+      };
+    });
   }
 }
