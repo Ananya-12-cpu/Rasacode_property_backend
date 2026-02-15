@@ -28,13 +28,17 @@ import {
   ApiBearerAuth,
   ApiConsumes,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { transformImageUrls } from '../common/helpers/file-url.helper';
 import { RbacGuard } from 'src/rbac/guards/rbac.guard';
 import { RequirePermission } from 'src/rbac/decorators/require-permission.decorator';
+import { Roles } from 'src/rbac/decorators/roles.decorator';
 import { PropertyFilterDto } from './dto/property-filter.dto';
+import { PendingPropertyFilterDto } from './dto/pending-property-filter.dto';
+import { RejectPropertyDto } from './dto/reject-property.dto';
 
 @ApiTags('Properties')
 @Controller('properties')
@@ -48,8 +52,11 @@ export class PropertyController {
   @UseGuards(JwtAuthGuard, RbacGuard)
   @RequirePermission({ resource: 'properties', action: 'add' })
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a property' })
-  @ApiResponse({ status: 201, description: 'Property created successfully' })
+  @ApiOperation({ summary: 'Submit a property for review' })
+  @ApiResponse({
+    status: 201,
+    description: 'Property submitted for review successfully',
+  })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FilesInterceptor('images', 10, {
@@ -122,23 +129,184 @@ export class PropertyController {
     @UploadedFiles() images: Express.Multer.File[],
     @Req() req: Request,
   ) {
-    const property = await this.propertyService.create(dto, images);
+    const user = (req as any).user;
+    const pendingProperty = await this.propertyService.create(
+      dto,
+      images,
+      user.id,
+    );
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    // Transform image filenames to full URLs
     const propertyWithUrls = {
-      ...property,
-      images: transformImageUrls(property.images || [], baseUrl),
+      ...pendingProperty,
+      images: transformImageUrls(pendingProperty.images || [], baseUrl),
     };
 
     return {
       is_success: true,
-      message: 'Property created successfully',
+      message:
+        'Property submitted for review. It will be visible after admin approval.',
       data: propertyWithUrls,
     };
   }
 
-  // GET ALL
+  // --- Pending property endpoints (static routes before :id) ---
+
+  @Get('my-pending')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get my pending properties' })
+  @ApiResponse({ status: 200, description: 'Pending properties fetched' })
+  async findMyPending(
+    @Query() filterDto: PendingPropertyFilterDto,
+    @Req() req: Request,
+  ) {
+    const user = (req as any).user;
+    const result = await this.propertyService.findMyPending(
+      user.id,
+      filterDto,
+    );
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    const dataWithUrls = result.data.map((p) => ({
+      ...p,
+      images: transformImageUrls(p.images || [], baseUrl),
+    }));
+
+    return {
+      is_success: true,
+      message: 'My pending properties fetched successfully',
+      data: dataWithUrls,
+      pagination: result.meta,
+    };
+  }
+
+  @Get('pending')
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @Roles('super_admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all pending properties (super_admin only)' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['pending', 'approved', 'rejected'],
+    description: 'Filter by status (defaults to pending)',
+  })
+  @ApiResponse({ status: 200, description: 'Pending properties fetched' })
+  async findAllPending(
+    @Query() filterDto: PendingPropertyFilterDto,
+    @Req() req: Request,
+  ) {
+    const result = await this.propertyService.findAllPending(filterDto);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    const dataWithUrls = result.data.map((p) => ({
+      ...p,
+      images: transformImageUrls(p.images || [], baseUrl),
+    }));
+
+    return {
+      is_success: true,
+      message: 'Pending properties fetched successfully',
+      data: dataWithUrls,
+      pagination: result.meta,
+    };
+  }
+
+  @Get('pending/:id')
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @Roles('super_admin')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get pending property by ID (super_admin only)',
+  })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Pending property fetched' })
+  async findOnePending(@Param('id') id: number, @Req() req: Request) {
+    const pending = await this.propertyService.findOnePending(+id);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    return {
+      is_success: true,
+      message: 'Pending property fetched successfully',
+      data: {
+        ...pending,
+        images: transformImageUrls(pending.images || [], baseUrl),
+        creator: pending.creator
+          ? {
+              id: pending.creator.id,
+              username: pending.creator.username,
+              first_name: pending.creator.first_name,
+              last_name: pending.creator.last_name,
+            }
+          : null,
+        reviewer: pending.reviewer
+          ? {
+              id: pending.reviewer.id,
+              username: pending.reviewer.username,
+            }
+          : null,
+      },
+    };
+  }
+
+  @Post('pending/:id/approve')
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @Roles('super_admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Approve a pending property (super_admin only)' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Property approved and published',
+  })
+  async approve(@Param('id') id: number, @Req() req: Request) {
+    const user = (req as any).user;
+    const property = await this.propertyService.approve(+id, user.id);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    return {
+      is_success: true,
+      message: 'Property approved and published successfully',
+      data: {
+        ...property,
+        images: transformImageUrls(property.images || [], baseUrl),
+      },
+    };
+  }
+
+  @Post('pending/:id/reject')
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @Roles('super_admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reject a pending property (super_admin only)' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Property rejected' })
+  async reject(
+    @Param('id') id: number,
+    @Body() dto: RejectPropertyDto,
+    @Req() req: Request,
+  ) {
+    const user = (req as any).user;
+    const pending = await this.propertyService.reject(
+      +id,
+      user.id,
+      dto.rejection_reason,
+    );
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    return {
+      is_success: true,
+      message: 'Property rejected',
+      data: {
+        ...pending,
+        images: transformImageUrls(pending.images || [], baseUrl),
+      },
+    };
+  }
+
+  // --- Approved property endpoints (unchanged) ---
+
   @Get()
   @ApiOperation({
     summary: 'Get all properties with global search, filters and pagination',

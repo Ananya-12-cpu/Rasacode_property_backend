@@ -47,6 +47,7 @@ async function seedSuperAdmin() {
       );
       existingUser.passwordHash = await bcrypt.hash('password123', 10);
       existingUser.roles = [superAdminRole];
+      existingUser.organization = null as any;
       await userRepository.save(existingUser);
       console.log('Super admin user updated');
     } else {
