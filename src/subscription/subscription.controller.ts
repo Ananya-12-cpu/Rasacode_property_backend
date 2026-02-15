@@ -70,7 +70,8 @@ export class SubscriptionController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user active subscription' })
   async getMySubscription(@Req() req: any) {
-    const userId = req.user.sub;
+    const userId = req.user.userId;
+
     const subscription =
       await this.subscriptionService.getActiveSubscription(userId);
 
@@ -95,7 +96,7 @@ export class SubscriptionController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user subscription history' })
   async getMyHistory(@Req() req: any) {
-    const userId = req.user.sub;
+    const userId = req.user.userId;
     const subscriptions =
       await this.subscriptionService.getUserSubscriptions(userId);
 
@@ -112,7 +113,7 @@ export class SubscriptionController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cancel current user subscription' })
   async cancelMySubscription(@Req() req: any, @Body('reason') reason?: string) {
-    const userId = req.user.sub;
+    const userId = req.user.userId;
     const activeSubscription =
       await this.subscriptionService.getActiveSubscription(userId);
 

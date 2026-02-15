@@ -189,6 +189,7 @@ export class SubscriptionService {
   async getActiveSubscription(
     userId: number,
   ): Promise<UserSubscription | null> {
+    // console.log(userId);
     return this.subscriptionRepository.findOne({
       where: {
         user_id: userId,
@@ -230,15 +231,23 @@ export class SubscriptionService {
   }
 
   // Cancel subscription
-  async cancelSubscription(
-    id: number,
-    reason?: string,
-  ): Promise<UserSubscription> {
+  async cancelSubscription(id: number, reason?: string): Promise<any> {
     const subscription = await this.findOne(id);
 
     if (subscription.status === SubscriptionStatus.CANCELLED) {
       throw new BadRequestException('Subscription is already cancelled');
     }
+
+    // Capture plan info before deletion
+    const planInfo = subscription.plan
+      ? {
+          id: subscription.plan.id,
+          name: subscription.plan.name,
+          display_name: subscription.plan.display_name,
+          plan_type: subscription.plan.plan_type,
+          price: subscription.plan.price,
+        }
+      : null;
 
     subscription.status = SubscriptionStatus.CANCELLED;
     subscription.cancelled_at = new Date();
@@ -251,7 +260,14 @@ export class SubscriptionService {
     await this.removeSubscriptionRoleFromUser(subscription.user_id);
     await this.deleteUserOrganization(subscription.user_id);
 
-    return subscription;
+    return {
+      id: subscription.id,
+      user_id: subscription.user_id,
+      plan: planInfo,
+      status: subscription.status,
+      cancelled_at: subscription.cancelled_at,
+      cancellation_reason: subscription.cancellation_reason,
+    };
   }
 
   // Delete the user's organization and its associated roles/plans
@@ -273,19 +289,36 @@ export class SubscriptionService {
       .where('organization_id = :organizationId', { organizationId })
       .execute();
 
+    // Get plan IDs for this organization
+    const orgPlans = await this.planRepository.find({
+      where: { organization_id: organizationId },
+      select: ['id'],
+    });
+    const planIds = orgPlans.map((p) => p.id);
+
+    // Delete subscriptions referencing these plans first
+    if (planIds.length > 0) {
+      await this.subscriptionRepository
+        .createQueryBuilder()
+        .delete()
+        .from(UserSubscription)
+        .where('plan_id IN (:...planIds)', { planIds })
+        .execute();
+    }
+
+    // Delete plans (plans reference roles via role_id FK)
+    await this.planRepository
+      .createQueryBuilder()
+      .delete()
+      .from(Plan)
+      .where('organization_id = :organizationId', { organizationId })
+      .execute();
+
     // Delete roles belonging to this organization
     await this.roleRepository
       .createQueryBuilder()
       .delete()
       .from(Role)
-      .where('organization_id = :organizationId', { organizationId })
-      .execute();
-
-    // Delete plans belonging to this organization
-    await this.planRepository
-      .createQueryBuilder()
-      .delete()
-      .from(Plan)
       .where('organization_id = :organizationId', { organizationId })
       .execute();
 
