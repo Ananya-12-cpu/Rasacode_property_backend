@@ -247,10 +247,50 @@ export class SubscriptionService {
 
     await this.subscriptionRepository.save(subscription);
 
-    // Remove subscription role from user
+    // Remove subscription role and delete organization
     await this.removeSubscriptionRoleFromUser(subscription.user_id);
+    await this.deleteUserOrganization(subscription.user_id);
 
     return subscription;
+  }
+
+  // Delete the user's organization and its associated roles/plans
+  private async deleteUserOrganization(userId: number): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['organization'],
+    });
+
+    if (!user || !user.organization) return;
+
+    const organizationId = user.organization.id;
+
+    // Remove organization from all users in this org
+    await this.userRepository
+      .createQueryBuilder()
+      .update(User)
+      .set({ organization: null as any })
+      .where('organization_id = :organizationId', { organizationId })
+      .execute();
+
+    // Delete roles belonging to this organization
+    await this.roleRepository
+      .createQueryBuilder()
+      .delete()
+      .from(Role)
+      .where('organization_id = :organizationId', { organizationId })
+      .execute();
+
+    // Delete plans belonging to this organization
+    await this.planRepository
+      .createQueryBuilder()
+      .delete()
+      .from(Plan)
+      .where('organization_id = :organizationId', { organizationId })
+      .execute();
+
+    // Delete the organization
+    await this.organizationRepository.delete(organizationId);
   }
 
   // Remove subscription role from user
@@ -285,6 +325,7 @@ export class SubscriptionService {
       subscription.cancelled_at = new Date();
       subscription.cancellation_reason = dto.cancellation_reason || '';
       await this.removeSubscriptionRoleFromUser(subscription.user_id);
+      await this.deleteUserOrganization(subscription.user_id);
     }
 
     if (dto.status === SubscriptionStatus.ACTIVE && !subscription.start_date) {

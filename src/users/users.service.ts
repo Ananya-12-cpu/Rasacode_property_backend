@@ -62,6 +62,7 @@ export class UsersService {
     // Create new user
     const user = this.userRepository.create({
       username,
+      email: username,
       passwordHash,
       first_name: first_name ?? null,
       last_name: last_name ?? null,
@@ -144,7 +145,7 @@ export class UsersService {
       first_name: user.first_name,
       last_name: user.last_name,
       phone_number: user.phone_number,
-      email: user.email,
+      email: user.email || user.username,
       date_of_birth: user.date_of_birth,
       gender: user.gender,
       profile_image: user.profile_image,
@@ -332,6 +333,7 @@ export class UsersService {
 
     const user = this.userRepository.create({
       username,
+      email: username,
       passwordHash,
       first_name: first_name ?? null,
       last_name: last_name ?? null,
