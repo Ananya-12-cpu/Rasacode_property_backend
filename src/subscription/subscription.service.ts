@@ -238,17 +238,6 @@ export class SubscriptionService {
       throw new BadRequestException('Subscription is already cancelled');
     }
 
-    // Capture plan info before deletion
-    const planInfo = subscription.plan
-      ? {
-          id: subscription.plan.id,
-          name: subscription.plan.name,
-          display_name: subscription.plan.display_name,
-          plan_type: subscription.plan.plan_type,
-          price: subscription.plan.price,
-        }
-      : null;
-
     subscription.status = SubscriptionStatus.CANCELLED;
     subscription.cancelled_at = new Date();
     subscription.cancellation_reason = reason || '';
@@ -256,77 +245,14 @@ export class SubscriptionService {
 
     await this.subscriptionRepository.save(subscription);
 
-    // Remove subscription role and delete organization
+    // Reset user role to basic_user and remove organization link
     await this.removeSubscriptionRoleFromUser(subscription.user_id);
-    await this.deleteUserOrganization(subscription.user_id);
+    await this.removeUserOrganization(subscription.user_id);
 
-    return {
-      id: subscription.id,
-      user_id: subscription.user_id,
-      plan: planInfo,
-      status: subscription.status,
-      cancelled_at: subscription.cancelled_at,
-      cancellation_reason: subscription.cancellation_reason,
-    };
+    return subscription;
   }
 
-  // Delete the user's organization and its associated roles/plans
-  private async deleteUserOrganization(userId: number): Promise<void> {
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      relations: ['organization'],
-    });
-
-    if (!user || !user.organization) return;
-
-    const organizationId = user.organization.id;
-
-    // Remove organization from all users in this org
-    await this.userRepository
-      .createQueryBuilder()
-      .update(User)
-      .set({ organization: null as any })
-      .where('organization_id = :organizationId', { organizationId })
-      .execute();
-
-    // Get plan IDs for this organization
-    const orgPlans = await this.planRepository.find({
-      where: { organization_id: organizationId },
-      select: ['id'],
-    });
-    const planIds = orgPlans.map((p) => p.id);
-
-    // Delete subscriptions referencing these plans first
-    if (planIds.length > 0) {
-      await this.subscriptionRepository
-        .createQueryBuilder()
-        .delete()
-        .from(UserSubscription)
-        .where('plan_id IN (:...planIds)', { planIds })
-        .execute();
-    }
-
-    // Delete plans (plans reference roles via role_id FK)
-    await this.planRepository
-      .createQueryBuilder()
-      .delete()
-      .from(Plan)
-      .where('organization_id = :organizationId', { organizationId })
-      .execute();
-
-    // Delete roles belonging to this organization
-    await this.roleRepository
-      .createQueryBuilder()
-      .delete()
-      .from(Role)
-      .where('organization_id = :organizationId', { organizationId })
-      .execute();
-
-    // Delete the organization
-    await this.organizationRepository.delete(organizationId);
-  }
-
-  // Remove subscription role from user
+  // Reset user role to basic_user on cancellation
   private async removeSubscriptionRoleFromUser(userId: number): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -335,9 +261,33 @@ export class SubscriptionService {
 
     if (!user) return;
 
-    const subscriptionRoles = ['basic_user', 'pro_user', 'professional_user'];
-    user.roles = user.roles.filter((r) => !subscriptionRoles.includes(r.Name));
+    // Don't touch super_admin roles
+    if (user.roles.some((r) => r.Name === 'super_admin')) return;
 
+    // Assign basic_user role
+    const basicRole = await this.roleRepository.findOne({
+      where: { Name: 'basic_user' },
+    });
+
+    if (basicRole) {
+      user.roles = [basicRole];
+    } else {
+      user.roles = [];
+    }
+
+    await this.userRepository.save(user);
+  }
+
+  // Remove organization link from user (without deleting the organization)
+  private async removeUserOrganization(userId: number): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['organization'],
+    });
+
+    if (!user || !user.organization) return;
+
+    user.organization = null as any;
     await this.userRepository.save(user);
   }
 
@@ -358,7 +308,7 @@ export class SubscriptionService {
       subscription.cancelled_at = new Date();
       subscription.cancellation_reason = dto.cancellation_reason || '';
       await this.removeSubscriptionRoleFromUser(subscription.user_id);
-      await this.deleteUserOrganization(subscription.user_id);
+      await this.removeUserOrganization(subscription.user_id);
     }
 
     if (dto.status === SubscriptionStatus.ACTIVE && !subscription.start_date) {
