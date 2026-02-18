@@ -40,6 +40,9 @@ export class PropertyRental {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @Column({ type: 'simple-array', nullable: true })
+  images: string[] | null;
+
   // Address
   @Column({ nullable: true })
   street_address: string;

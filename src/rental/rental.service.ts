@@ -23,6 +23,7 @@ export class RentalService {
   async create(
     dto: CreateRentalDto,
     createdBy: number,
+    images?: Express.Multer.File[],
   ): Promise<PropertyRental> {
     // Check for duplicate active rental at the same address
     const duplicate = await this.rentalRepository.findOne({
@@ -40,8 +41,11 @@ export class RentalService {
       );
     }
 
+    const imageUrls = images?.map((f) => f.filename) ?? [];
+
     const rental = this.rentalRepository.create({
       ...dto,
+      images: imageUrls.length > 0 ? imageUrls : null,
       created_by: createdBy,
       status: RentalStatus.ACTIVE,
     });
@@ -107,14 +111,23 @@ export class RentalService {
     return rental;
   }
 
-  async update(id: number, dto: UpdateRentalDto): Promise<PropertyRental> {
+  async update(
+    id: number,
+    dto: UpdateRentalDto,
+    images?: Express.Multer.File[],
+  ): Promise<PropertyRental> {
     const rental = await this.findOne(id);
 
     if (rental.status === RentalStatus.CANCELLED) {
       throw new BadRequestException('Cannot update a cancelled rental');
     }
 
+    const imageUrls = images?.map((f) => f.filename) ?? [];
     Object.assign(rental, dto);
+    if (imageUrls.length > 0) {
+      rental.images = imageUrls;
+    }
+
     return this.rentalRepository.save(rental);
   }
 

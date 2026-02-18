@@ -126,4 +126,12 @@ export class CreateRentalDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({
+    type: 'array',
+    items: { type: 'string', format: 'binary' },
+    description: 'Rental images (multipart/form-data)',
+  })
+  @IsOptional()
+  images?: any;
 }
