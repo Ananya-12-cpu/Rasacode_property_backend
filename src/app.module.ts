@@ -18,6 +18,7 @@ import { PlanModule } from './plan/plan.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { OrganizationModule } from './organization/organization.module';
+import { RentalModule } from './rental/rental.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { OrganizationModule } from './organization/organization.module';
     SubscriptionModule,
     ContactsModule,
     OrganizationModule,
+    RentalModule,
   ],
   controllers: [AppController],
   providers: [AppService],
