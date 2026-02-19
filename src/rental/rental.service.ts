@@ -47,7 +47,7 @@ export class RentalService {
       ...dto,
       images: imageUrls.length > 0 ? imageUrls : null,
       created_by: createdBy,
-      status: RentalStatus.ACTIVE,
+      status: RentalStatus.PENDING,
     });
     return this.rentalRepository.save(rental);
   }
@@ -131,6 +131,36 @@ export class RentalService {
     return this.rentalRepository.save(rental);
   }
 
+  async activate(id: number): Promise<PropertyRental> {
+    const rental = await this.findOne(id);
+
+    if (rental.status === RentalStatus.ACTIVE) {
+      throw new BadRequestException('Rental is already active');
+    }
+
+    if (rental.status === RentalStatus.CANCELLED) {
+      throw new BadRequestException('Cannot activate a cancelled rental');
+    }
+
+    rental.status = RentalStatus.ACTIVE;
+    return this.rentalRepository.save(rental);
+  }
+
+  async deactivate(id: number): Promise<PropertyRental> {
+    const rental = await this.findOne(id);
+
+    if (rental.status === RentalStatus.INACTIVE) {
+      throw new BadRequestException('Rental is already inactive');
+    }
+
+    if (rental.status === RentalStatus.CANCELLED) {
+      throw new BadRequestException('Cannot deactivate a cancelled rental');
+    }
+
+    rental.status = RentalStatus.INACTIVE;
+    return this.rentalRepository.save(rental);
+  }
+
   async cancel(id: number): Promise<PropertyRental> {
     const rental = await this.findOne(id);
 
@@ -172,6 +202,16 @@ export class RentalService {
       parking_spaces: rental.parking_spaces,
       roof_age: rental.roof_age,
       roof_status: rental.roof_status,
+      rent_frequency: rental.rent_frequency,
+      lease_duration_months: rental.lease_duration_months,
+      available_from: rental.available_from,
+      smoking_policy: rental.smoking_policy,
+      is_furnished: rental.is_furnished,
+      pets_allowed: rental.pets_allowed,
+      application_fee: rental.application_fee,
+      move_in_fees: rental.move_in_fees,
+      utilities_included: rental.utilities_included,
+      amenities: rental.amenities,
       created_at: rental.created_at,
       created_by: rental.creator
         ? { id: rental.creator.id, username: rental.creator.username }

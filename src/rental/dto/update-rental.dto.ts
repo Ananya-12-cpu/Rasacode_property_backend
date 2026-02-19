@@ -1,15 +1,22 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   Min,
 } from 'class-validator';
-import { RentalStatus } from '../../entities/property-rental.entity';
-import { Type } from 'class-transformer';
+import {
+  RentFrequency,
+  RentalStatus,
+  SmokingPolicy,
+} from '../../entities/property-rental.entity';
+import { Transform, Type } from 'class-transformer';
 
 export class UpdateRentalDto {
   @ApiProperty({ example: 1500.0, description: 'Monthly rent amount' })
@@ -127,6 +134,102 @@ export class UpdateRentalDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  // Rental listing fields
+  @ApiPropertyOptional({
+    enum: RentFrequency,
+    example: RentFrequency.MONTHLY,
+    description: 'Rent frequency',
+  })
+  @IsOptional()
+  @IsEnum(RentFrequency)
+  rent_frequency?: RentFrequency;
+
+  @ApiPropertyOptional({ example: 12, description: 'Lease duration in months' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  lease_duration_months?: number;
+
+  @ApiPropertyOptional({
+    example: '2026-04-01',
+    description: 'Date from which rental is available (YYYY-MM-DD)',
+  })
+  @IsOptional()
+  @IsDateString()
+  available_from?: string;
+
+  @ApiPropertyOptional({
+    enum: SmokingPolicy,
+    example: SmokingPolicy.NOT_ALLOWED,
+    description: 'Smoking policy',
+  })
+  @IsOptional()
+  @IsEnum(SmokingPolicy)
+  smoking_policy?: SmokingPolicy;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Is the unit furnished?',
+  })
+  @IsOptional()
+  @IsBoolean()
+  is_furnished?: boolean;
+
+  @ApiPropertyOptional({ example: false, description: 'Are pets allowed?' })
+  @IsOptional()
+  @IsBoolean()
+  pets_allowed?: boolean;
+
+  @ApiPropertyOptional({ example: 200.0, description: 'Application fee' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  application_fee?: number;
+
+  @ApiPropertyOptional({ example: 500.0, description: 'Move-in fees' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  move_in_fees?: number;
+
+  @ApiPropertyOptional({
+    example: ['water', 'electricity', 'gas'],
+    description:
+      'Utilities included (water, electricity, gas, internet, cable, trash, sewer, heat, air_conditioning)',
+    type: [String],
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    Array.isArray(value)
+      ? (value as string[])
+      : typeof value === 'string'
+        ? value.split(',').map((v) => v.trim())
+        : [],
+  )
+  @IsArray()
+  @IsString({ each: true })
+  utilities_included?: string[];
+
+  @ApiPropertyOptional({
+    example: ['pool', 'gym'],
+    description: 'Amenities & facilities (pool, gym, elevator, parking, ...)',
+    type: [String],
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    Array.isArray(value)
+      ? (value as string[])
+      : typeof value === 'string'
+        ? value.split(',').map((v) => v.trim())
+        : [],
+  )
+  @IsArray()
+  @IsString({ each: true })
+  amenities?: string[];
 
   @ApiPropertyOptional({
     type: 'array',

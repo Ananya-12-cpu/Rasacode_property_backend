@@ -4,7 +4,9 @@
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
       "Bash(npm run start:dev:*)",
-      "Bash(npx ts-node:*)"
+      "Bash(npx ts-node:*)",
+      "Bash(sc query:*)",
+      "Bash(net start:*)"
     ]
   }
 }

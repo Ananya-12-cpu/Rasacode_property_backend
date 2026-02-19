@@ -32,7 +32,7 @@ import { Roles } from '../rbac/decorators/roles.decorator';
 
 const rentalImageStorage = diskStorage({
   destination: './uploads/rentals',
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, uniqueName + extname(file.originalname));
   },
@@ -131,6 +131,36 @@ export class RentalController {
     return {
       is_success: true,
       message: 'Rental updated successfully',
+      data: rental,
+    };
+  }
+
+  @Post(':id/activate')
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @Roles('super_admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Activate a rental (super_admin)' })
+  @ApiParam({ name: 'id', type: Number })
+  async activate(@Param('id') id: number) {
+    const rental = await this.rentalService.activate(+id);
+    return {
+      is_success: true,
+      message: 'Rental activated successfully',
+      data: rental,
+    };
+  }
+
+  @Post(':id/deactivate')
+  @UseGuards(JwtAuthGuard, RbacGuard)
+  @Roles('super_admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Deactivate a rental (super_admin)' })
+  @ApiParam({ name: 'id', type: Number })
+  async deactivate(@Param('id') id: number) {
+    const rental = await this.rentalService.deactivate(+id);
+    return {
+      is_success: true,
+      message: 'Rental deactivated successfully',
       data: rental,
     };
   }
