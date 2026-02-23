@@ -200,11 +200,11 @@ export class RbacController {
 
   @Get('roles')
   @UseGuards(RolesGuard)
-  @Roles('super_admin')
+  @Roles('super_admin', 'enterprise_role')
   @ApiOperation({
     summary: 'Get all roles',
     description:
-      'Retrieves all roles with their associated permissions. Only accessible by super_admin.',
+      'super_admin sees all global roles. enterprise_role users see only buyer/seller/broker roles of their organization.',
   })
   @ApiResponse({
     status: 200,
@@ -274,8 +274,15 @@ export class RbacController {
     type: Number,
     description: 'Filter roles by organization ID',
   })
-  findAll(@Query('organization_id') organizationId?: number) {
+  findAll(
+    @Request() req: any,
+    @Query('organization_id') organizationId?: number,
+  ) {
+    const userRoles: string[] = req.user?.roles?.map((r: any) => r.Name) ?? [];
+    const userOrgId: number | null = req.user?.organization_id ?? null;
     return this.rbacService.findAllRoles(
+      userRoles,
+      userOrgId,
       organizationId ? +organizationId : undefined,
     );
   }

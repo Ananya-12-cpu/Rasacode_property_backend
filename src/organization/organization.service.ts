@@ -9,11 +9,43 @@ import { Organization } from '../entities/organization.entity';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { Plan } from '../entities/plan.entity';
+import { Permission } from '../entities/permission.entity';
 import {
   CreateOrganizationDto,
   UpdateOrganizationDto,
   OrganizationFilterDto,
 } from './dtos/organization.request.dto';
+
+// These 3 roles are auto-created for every organization
+const ORG_SCOPED_ROLES = [
+  {
+    Name: 'buyer',
+    role_title: 'Buyer',
+    permissions: {
+      campaign: { add: false, view: true, edit: false, delete: false },
+      properties: { add: false, view: true, edit: false, delete: false },
+      buyer: { add: true, view: true, edit: true, delete: false },
+    },
+  },
+  {
+    Name: 'seller',
+    role_title: 'Seller',
+    permissions: {
+      campaign: { add: true, view: true, edit: true, delete: false },
+      properties: { add: true, view: true, edit: true, delete: false },
+      seller: { add: true, view: true, edit: true, delete: false },
+    },
+  },
+  {
+    Name: 'broker',
+    role_title: 'Broker',
+    permissions: {
+      campaign: { add: true, view: true, edit: true, delete: true },
+      properties: { add: true, view: true, edit: true, delete: true },
+      broker: { add: true, view: true, edit: true, delete: true },
+    },
+  },
+];
 
 @Injectable()
 export class OrganizationService {
@@ -26,6 +58,8 @@ export class OrganizationService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(Plan)
     private readonly planRepository: Repository<Plan>,
+    @InjectRepository(Permission)
+    private readonly permissionRepository: Repository<Permission>,
   ) {}
 
   async create(dto: CreateOrganizationDto): Promise<Organization> {
@@ -41,7 +75,25 @@ export class OrganizationService {
     }
 
     const organization = this.organizationRepository.create(dto);
-    return this.organizationRepository.save(organization);
+    const savedOrg = await this.organizationRepository.save(organization);
+
+    // Auto-create buyer, seller, broker roles scoped to this organization
+    for (const roleData of ORG_SCOPED_ROLES) {
+      const role = this.roleRepository.create({
+        Name: roleData.Name,
+        role_title: roleData.role_title,
+        organization: savedOrg,
+      });
+      const savedRole = await this.roleRepository.save(role);
+      await this.permissionRepository.save(
+        this.permissionRepository.create({
+          role: savedRole,
+          permissions: roleData.permissions as any,
+        }),
+      );
+    }
+
+    return savedOrg;
   }
 
   async findAll(filterDto: OrganizationFilterDto) {

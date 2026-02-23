@@ -24,181 +24,150 @@ export async function seedRoles(dataSource: DataSource) {
   });
   await roleRepository.save(superAdminRole);
 
-  const superAdminPermission = permissionRepository.create({
+  await permissionRepository.save(permissionRepository.create({
     role: superAdminRole,
     permissions: {
-      campaign: {
-        add: true,
-        view: true,
-        edit: true,
-        delete: true,
-      },
-      properties: {
-        add: true,
-        view: true,
-        edit: true,
-        delete: true,
-      },
-      user_management: {
-        add: true,
-        view: true,
-        edit: true,
-        delete: true,
-      },
+      campaign: { add: true, view: true, edit: true, delete: true },
+      properties: { add: true, view: true, edit: true, delete: true },
+      user_management: { add: true, view: true, edit: true, delete: true },
+      buyer: { add: true, view: true, edit: true, delete: true },
+      seller: { add: true, view: true, edit: true, delete: true },
+      broker: { add: true, view: true, edit: true, delete: true },
     },
-  });
-  await permissionRepository.save(superAdminPermission);
+  }));
   console.log('✅ Created super_admin role with full permissions');
 
   // ==================== FREE ROLE ====================
-  const basicUserRole = roleRepository.create({
+  const freeRole = roleRepository.create({
     Name: 'free_role',
     role_title: 'Free',
   });
-  await roleRepository.save(basicUserRole);
+  await roleRepository.save(freeRole);
 
-  const basicUserPermission = permissionRepository.create({
-    role: basicUserRole,
+  await permissionRepository.save(permissionRepository.create({
+    role: freeRole,
     permissions: {
-      campaign: {
-        add: false,
-        view: true,
-        edit: false,
-        delete: false,
-      },
-      properties: {
-        add: false,
-        view: true,
-        edit: false,
-        delete: false,
-      },
+      campaign: { add: false, view: true, edit: false, delete: false },
+      properties: { add: false, view: true, edit: false, delete: false },
     },
-  });
-  await permissionRepository.save(basicUserPermission);
+  }));
   console.log('✅ Created free_role with view-only permissions');
 
-  // ==================== PRO USER ROLE ====================
-  const proUserRole = roleRepository.create({
-    Name: 'pro_user',
-    role_title: 'Pro User',
+  // ==================== PLUS ROLE ====================
+  const plusRole = roleRepository.create({
+    Name: 'plus_role',
+    role_title: 'Plus',
   });
-  await roleRepository.save(proUserRole);
+  await roleRepository.save(plusRole);
 
-  const proUserPermission = permissionRepository.create({
-    role: proUserRole,
+  await permissionRepository.save(permissionRepository.create({
+    role: plusRole,
     permissions: {
-      campaign: {
-        add: true,
-        view: true,
-        edit: true,
-        delete: false,
-      },
-      properties: {
-        add: true,
-        view: true,
-        edit: true,
-        delete: false,
-      },
+      campaign: { add: true, view: true, edit: false, delete: false },
+      properties: { add: true, view: true, edit: false, delete: false },
     },
-  });
-  await permissionRepository.save(proUserPermission);
-  console.log('✅ Created pro_user role with add/edit permissions');
+  }));
+  console.log('✅ Created plus_role');
 
-  // ==================== PROFESSIONAL USER ROLE ====================
-  const professionalUserRole = roleRepository.create({
-    Name: 'professional_user',
-    role_title: 'Professional User',
+  // ==================== PRO ROLE ====================
+  const proRole = roleRepository.create({
+    Name: 'pro_role',
+    role_title: 'Pro',
   });
-  await roleRepository.save(professionalUserRole);
+  await roleRepository.save(proRole);
 
-  const professionalUserPermission = permissionRepository.create({
-    role: professionalUserRole,
+  await permissionRepository.save(permissionRepository.create({
+    role: proRole,
     permissions: {
-      campaign: {
-        add: true,
-        view: true,
-        edit: true,
-        delete: true,
-      },
-      properties: {
-        add: true,
-        view: true,
-        edit: true,
-        delete: true,
-      },
+      campaign: { add: true, view: true, edit: true, delete: false },
+      properties: { add: true, view: true, edit: true, delete: false },
     },
+  }));
+  console.log('✅ Created pro_role');
+
+  // ==================== ENTERPRISE ROLE ====================
+  const enterpriseRole = roleRepository.create({
+    Name: 'enterprise_role',
+    role_title: 'Enterprise',
   });
-  await permissionRepository.save(professionalUserPermission);
-  console.log('✅ Created professional_user role with full permissions');
+  await roleRepository.save(enterpriseRole);
+
+  await permissionRepository.save(permissionRepository.create({
+    role: enterpriseRole,
+    permissions: {
+      campaign: { add: true, view: true, edit: true, delete: true },
+      properties: { add: true, view: true, edit: true, delete: true },
+      user_management: { add: true, view: true, edit: true, delete: false },
+      buyer: { add: true, view: true, edit: true, delete: true },
+      seller: { add: true, view: true, edit: true, delete: true },
+      broker: { add: true, view: true, edit: true, delete: true },
+    },
+  }));
+  console.log('✅ Created enterprise_role');
+
+  // NOTE: buyer, seller, broker roles are NOT seeded globally.
+  // They are created per-organization when an organization is created.
 
   // ==================== SUBSCRIPTION PLANS ====================
   console.log('🌱 Seeding subscription plans...');
 
-  // Basic Plan
-  const basicPlan = planRepository.create({
-    name: 'basic_plan',
-    display_name: 'Basic Plan',
-    description: 'Perfect for getting started. Access basic features.',
+  await planRepository.save(planRepository.create({
+    name: 'free_plan',
+    display_name: 'Free Plan',
+    description: 'Get started for free. View-only access.',
+    price: 0,
+    billing_cycle: 'monthly',
+    plan_type: PlanType.BASIC,
+    role: freeRole,
+    is_active: true,
+    features: ['View properties', 'View campaigns', 'Email support'],
+  }));
+  console.log('✅ Created Free Plan');
+
+  await planRepository.save(planRepository.create({
+    name: 'plus_plan',
+    display_name: 'Plus Plan',
+    description: 'Add listings and campaigns.',
     price: 9.99,
     billing_cycle: 'monthly',
     plan_type: PlanType.BASIC,
-    role: basicUserRole,
+    role: plusRole,
     is_active: true,
-    features: [
-      'View properties',
-      'View campaigns',
-      'Email support',
-      'Basic analytics',
-    ],
-  });
-  await planRepository.save(basicPlan);
-  console.log('✅ Created Basic Plan');
+    features: ['All Free features', 'Add properties', 'Add campaigns', 'Priority support'],
+  }));
+  console.log('✅ Created Plus Plan');
 
-  // Pro Plan
-  const proPlan = planRepository.create({
+  await planRepository.save(planRepository.create({
     name: 'pro_plan',
     display_name: 'Pro Plan',
-    description: 'For growing businesses. Add and edit capabilities.',
+    description: 'Add and edit listings with advanced tools.',
     price: 29.99,
     billing_cycle: 'monthly',
     plan_type: PlanType.PRO,
-    role: proUserRole,
+    role: proRole,
     is_active: true,
-    features: [
-      'All Basic features',
-      'Add properties',
-      'Add campaigns',
-      'Edit properties',
-      'Edit campaigns',
-      'Priority support',
-      'Advanced analytics',
-    ],
-  });
-  await planRepository.save(proPlan);
+    features: ['All Plus features', 'Edit properties', 'Edit campaigns', 'Advanced analytics'],
+  }));
   console.log('✅ Created Pro Plan');
 
-  // Professional Plan
-  const professionalPlan = planRepository.create({
-    name: 'professional_plan',
-    display_name: 'Professional Plan',
-    description: 'Full access for professionals. All features unlocked.',
+  await planRepository.save(planRepository.create({
+    name: 'enterprise_plan',
+    display_name: 'Enterprise Plan',
+    description: 'Full access with team management and buyer/seller/broker roles.',
     price: 99.99,
     billing_cycle: 'monthly',
     plan_type: PlanType.PROFESSIONAL,
-    role: professionalUserRole,
+    role: enterpriseRole,
     is_active: true,
     features: [
       'All Pro features',
-      'Delete properties',
-      'Delete campaigns',
+      'Delete properties & campaigns',
+      'Buyer / Seller / Broker roles',
       'Dedicated support',
-      'Custom integrations',
       'API access',
-      'White-label options',
     ],
-  });
-  await planRepository.save(professionalPlan);
-  console.log('✅ Created Professional Plan');
+  }));
+  console.log('✅ Created Enterprise Plan');
 
   console.log('🎉 Role and Plan seeding completed!');
 }

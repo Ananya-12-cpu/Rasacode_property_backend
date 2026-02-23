@@ -13,6 +13,7 @@ import {
   Req,
   Request as NestRequest,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -27,6 +28,8 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RbacGuard } from '../rbac/guards/rbac.guard';
+import { RolesGuard } from '../rbac/guards/roles.guard';
+import { Roles } from '../rbac/decorators/roles.decorator';
 import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { UsersService } from './users.service';
 import { UserFilterDto } from './dto/user-filter.dto';
@@ -76,6 +79,27 @@ export class UsersController {
       message: 'Users fetched successfully',
       data: result.data,
       pagination: result.pagination,
+    };
+  }
+
+  @Get('my-users')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('enterprise_role')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get users in my organization',
+    description: 'enterprise_role users can only see users belonging to their own organization.',
+  })
+  async getMyUsers(@NestRequest() req: any) {
+    const organizationId = req.user?.organization_id;
+    if (!organizationId) {
+      throw new ForbiddenException('You are not attached to any organization');
+    }
+    const data = await this.usersService.getMyOrganizationUsers(organizationId);
+    return {
+      is_success: true,
+      message: 'Users fetched successfully',
+      data,
     };
   }
 

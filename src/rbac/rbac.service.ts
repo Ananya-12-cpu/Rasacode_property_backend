@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Role } from '../entities/role.entity';
 import { Permission } from '../entities/permission.entity';
 import { User } from '../entities/user.entity';
@@ -87,19 +87,39 @@ export class RbacService {
     return this.findRoleById(savedRole.Id);
   }
 
-  async findAllRoles(organizationId?: number) {
-    const whereClause: any = {};
-    if (organizationId) {
-      whereClause.organization = { id: organizationId };
+  async findAllRoles(
+    requestingUserRoles: string[],
+    requestingUserOrgId: number | null,
+    organizationId?: number,
+  ) {
+    const isSuperAdmin = requestingUserRoles.includes('super_admin');
+    const isEnterprise = requestingUserRoles.includes('enterprise_role');
+
+    let roles: Role[];
+
+    if (isSuperAdmin) {
+      // super_admin sees all global roles (no organization attached)
+      const whereClause: any = organizationId
+        ? { organization: { id: organizationId } }
+        : {};
+      roles = await this.roleRepository.find({
+        where: whereClause,
+        relations: ['permissions', 'organization'],
+      });
+    } else if (isEnterprise && requestingUserOrgId) {
+      // enterprise_role user sees only buyer, seller, broker of their own organization
+      roles = await this.roleRepository.find({
+        where: {
+          Name: In(['buyer', 'seller', 'broker']),
+          organization: { id: requestingUserOrgId },
+        },
+        relations: ['permissions', 'organization'],
+      });
+    } else {
+      return [];
     }
 
-    // Fetch roles with permissions and organization (no users join — inverse side has no @JoinTable)
-    const roles = await this.roleRepository.find({
-      where: whereClause,
-      relations: ['permissions', 'organization'],
-    });
-
-    // Fetch users from the owning side (User has @JoinTable), selecting only safe fields
+    // Fetch users from the owning side (User has @JoinTable) — only safe fields
     const users = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'role')

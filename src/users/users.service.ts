@@ -231,6 +231,7 @@ export class UsersService {
     // Get total count and paginated data
     const [users, total] = await queryBuilder
       .leftJoinAndSelect('user.organization', 'organization')
+      .leftJoinAndSelect('user.roles', 'roles')
       .orderBy('user.id', 'DESC')
       .skip(skip)
       .take(limit)
@@ -263,6 +264,7 @@ export class UsersService {
           first_name: u.first_name,
           last_name: u.last_name,
           phone_number: u.phone_number,
+          roles: u.roles?.map((r) => ({ id: r.Id, name: r.Name, role_title: r.role_title })) ?? [],
           organization: u.organization
             ? {
                 id: u.organization.id,
@@ -353,5 +355,22 @@ export class UsersService {
       organization_id: creatorOrganizationId,
       role: role.Name,
     };
+  }
+
+  async getMyOrganizationUsers(organizationId: number) {
+    const users = await this.userRepository.find({
+      where: { organization: { id: organizationId } },
+      relations: ['roles', 'organization'],
+    });
+
+    return users.map((u) => ({
+      id: u.id,
+      username: u.username,
+      first_name: u.first_name,
+      last_name: u.last_name,
+      phone_number: u.phone_number,
+      email: u.email,
+      roles: u.roles?.map((r) => ({ id: r.Id, name: r.Name, role_title: r.role_title })) ?? [],
+    }));
   }
 }
