@@ -27,7 +27,8 @@
     "migration:show": "npx typeorm-ts-node-commonjs migration:show -d ./src/database/data-source.ts",
     "migration:run": "npx typeorm-ts-node-commonjs migration:run -d  ./src/database/data-source.ts",
     "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d ./src/database/data-source.ts",
-    "seed:roles": "ts-node src/rbac/seeds/run-seed.ts"
+    "seed:roles": "ts-node src/rbac/seeds/run-seed.ts",
+    "seed:superadmin": "ts-node src/rbac/seeds/seed-superadmin.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.11",
@@ -43,6 +44,7 @@
     "class-validator": "^0.14.3",
     "dotenv": "^17.2.3",
     "mssql": "^12.2.0",
+    "multer": "^2.0.2",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.2.2",
@@ -56,8 +58,10 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/multer": "^2.0.0",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
