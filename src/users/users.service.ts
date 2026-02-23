@@ -47,8 +47,8 @@ export class UsersService {
       throw new BadRequestException('User already exists');
     }
 
-    // Get role - default to 'basic_user' if not specified
-    const roleToAssign = roleName || 'basic_user';
+    // Get role - default to 'free_role' if not specified
+    const roleToAssign = roleName || 'free_role';
     const role = await this.roleRepository.findOne({
       where: { Name: roleToAssign },
     });

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { seedRoles } from './seed-roles';
+import { seedSuperAdmin } from './seed-superadmin';
 
 async function runSeed() {
   const dataSource = new DataSource({
@@ -22,6 +23,7 @@ async function runSeed() {
     console.log('✅ Database connected');
 
     await seedRoles(dataSource);
+    await seedSuperAdmin(dataSource);
 
     await dataSource.destroy();
     console.log('✅ Database connection closed');

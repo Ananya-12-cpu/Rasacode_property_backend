@@ -190,7 +190,12 @@ export class RbacController {
       createRoleDto.organization_id = creatorOrgId;
     }
 
-    return this.rbacService.createRole(createRoleDto);
+    const roleResponse = await this.rbacService.createRole(createRoleDto);
+     return {
+      is_success: true,
+      message: 'Role created successfully',
+      data: roleResponse,
+    };
   }
 
   @Get('roles')

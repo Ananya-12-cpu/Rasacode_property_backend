@@ -50,10 +50,10 @@ export async function seedRoles(dataSource: DataSource) {
   await permissionRepository.save(superAdminPermission);
   console.log('✅ Created super_admin role with full permissions');
 
-  // ==================== BASIC USER ROLE ====================
+  // ==================== FREE ROLE ====================
   const basicUserRole = roleRepository.create({
-    Name: 'basic_user',
-    role_title: 'Basic User',
+    Name: 'free_role',
+    role_title: 'Free',
   });
   await roleRepository.save(basicUserRole);
 
@@ -75,7 +75,7 @@ export async function seedRoles(dataSource: DataSource) {
     },
   });
   await permissionRepository.save(basicUserPermission);
-  console.log('✅ Created basic_user role with view-only permissions');
+  console.log('✅ Created free_role with view-only permissions');
 
   // ==================== PRO USER ROLE ====================
   const proUserRole = roleRepository.create({

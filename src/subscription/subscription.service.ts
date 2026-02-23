@@ -264,9 +264,9 @@ export class SubscriptionService {
     // Don't touch super_admin roles
     if (user.roles.some((r) => r.Name === 'super_admin')) return;
 
-    // Assign basic_user role
+    // Assign free_role on subscription cancellation
     const basicRole = await this.roleRepository.findOne({
-      where: { Name: 'basic_user' },
+      where: { Name: 'free_role' },
     });
 
     if (basicRole) {

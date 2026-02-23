@@ -87,15 +87,60 @@ export class RbacService {
     return this.findRoleById(savedRole.Id);
   }
 
-  async findAllRoles(organizationId?: number): Promise<Role[]> {
+  async findAllRoles(organizationId?: number) {
     const whereClause: any = {};
     if (organizationId) {
       whereClause.organization = { id: organizationId };
     }
-    return this.roleRepository.find({
+
+    // Fetch roles with permissions and organization (no users join — inverse side has no @JoinTable)
+    const roles = await this.roleRepository.find({
       where: whereClause,
       relations: ['permissions', 'organization'],
     });
+
+    // Fetch users from the owning side (User has @JoinTable), selecting only safe fields
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'role')
+      .select([
+        'user.id',
+        'user.username',
+        'user.first_name',
+        'user.last_name',
+        'user.email',
+        'role.Id',
+      ])
+      .getMany();
+
+    // Build roleId -> users[] map
+    const roleUserMap = new Map<number, { id: number; username: string; first_name: string; last_name: string; email: string }[]>();
+    for (const user of users) {
+      for (const role of user.roles ?? []) {
+        if (!roleUserMap.has(role.Id)) {
+          roleUserMap.set(role.Id, []);
+        }
+        roleUserMap.get(role.Id)!.push({
+          id: user.id,
+          username: user.username,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          email: user.email,
+        });
+      }
+    }
+
+    return roles.map((role) => ({
+      id: role.Id,
+      name: role.Name,
+      role_title: role.role_title,
+      organization: role.organization
+        ? { id: role.organization.id, name: role.organization.name }
+        : null,
+      permissions: role.permissions ?? [],
+      users: roleUserMap.get(role.Id) ?? [],
+      user_count: roleUserMap.get(role.Id)?.length ?? 0,
+    }));
   }
 
   async findRoleById(id: number): Promise<Role> {
