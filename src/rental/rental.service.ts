@@ -52,7 +52,7 @@ export class RentalService {
     return this.rentalRepository.save(rental);
   }
 
-  async findAll(filterDto: RentalFilterDto) {
+  async findAll(filterDto: RentalFilterDto, baseUrl: string) {
     const { status, page = 1, limit = 10 } = filterDto;
     const skip = (page - 1) * limit;
 
@@ -71,12 +71,12 @@ export class RentalService {
       .getManyAndCount();
 
     return {
-      data: data.map((r) => this.formatRental(r)),
+      data: data.map((r) => this.formatRental(r, baseUrl)),
       pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 
-  async findMyRentals(userId: number, filterDto: RentalFilterDto) {
+  async findMyRentals(userId: number, filterDto: RentalFilterDto, baseUrl: string) {
     const { status, page = 1, limit = 10 } = filterDto;
     const skip = (page - 1) * limit;
 
@@ -95,12 +95,17 @@ export class RentalService {
       .getManyAndCount();
 
     return {
-      data: data.map((r) => this.formatRental(r)),
+      data: data.map((r) => this.formatRental(r, baseUrl)),
       pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 
-  async findOne(id: number): Promise<PropertyRental> {
+  async findOne(id: number, baseUrl?: string) {
+    const rental = await this.findEntity(id);
+    return this.formatRental(rental, baseUrl ?? '');
+  }
+
+  private async findEntity(id: number): Promise<PropertyRental> {
     const rental = await this.rentalRepository.findOne({
       where: { id },
       relations: ['creator'],
@@ -116,7 +121,7 @@ export class RentalService {
     dto: UpdateRentalDto,
     images?: Express.Multer.File[],
   ): Promise<PropertyRental> {
-    const rental = await this.findOne(id);
+    const rental = await this.findEntity(id);
 
     if (rental.status === RentalStatus.CANCELLED) {
       throw new BadRequestException('Cannot update a cancelled rental');
@@ -132,7 +137,7 @@ export class RentalService {
   }
 
   async activate(id: number): Promise<PropertyRental> {
-    const rental = await this.findOne(id);
+    const rental = await this.findEntity(id);
 
     if (rental.status === RentalStatus.ACTIVE) {
       throw new BadRequestException('Rental is already active');
@@ -147,7 +152,7 @@ export class RentalService {
   }
 
   async deactivate(id: number): Promise<PropertyRental> {
-    const rental = await this.findOne(id);
+    const rental = await this.findEntity(id);
 
     if (rental.status === RentalStatus.INACTIVE) {
       throw new BadRequestException('Rental is already inactive');
@@ -162,7 +167,7 @@ export class RentalService {
   }
 
   async cancel(id: number): Promise<PropertyRental> {
-    const rental = await this.findOne(id);
+    const rental = await this.findEntity(id);
 
     if (rental.status === RentalStatus.CANCELLED) {
       throw new BadRequestException('Rental is already cancelled');
@@ -173,13 +178,18 @@ export class RentalService {
   }
 
   async remove(id: number): Promise<void> {
-    const rental = await this.findOne(id);
+    const rental = await this.findEntity(id);
     await this.rentalRepository.remove(rental);
   }
 
-  private formatRental(rental: PropertyRental) {
+  private formatRental(rental: PropertyRental, baseUrl: string) {
+    const images = (rental.images ?? []).map((img) =>
+      img.startsWith('http') ? img : `${baseUrl}/uploads/rentals/${img}`,
+    );
+
     return {
       id: rental.id,
+      images,
       status: rental.status,
       monthly_rent: rental.monthly_rent,
       security_deposit: rental.security_deposit,
@@ -214,7 +224,7 @@ export class RentalService {
       amenities: rental.amenities,
       created_at: rental.created_at,
       created_by: rental.creator
-        ? { id: rental.creator.id, username: rental.creator.username }
+        ? { id: rental.creator.id, username: rental.creator.username, phone_number: rental.creator.phone_number }
         : null,
     };
   }

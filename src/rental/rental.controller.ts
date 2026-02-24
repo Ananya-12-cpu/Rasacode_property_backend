@@ -70,8 +70,9 @@ export class RentalController {
 
   @Get()
   @ApiOperation({ summary: 'Get all rentals' })
-  async findAll(@Query() filterDto: RentalFilterDto) {
-    const result = await this.rentalService.findAll(filterDto);
+  async findAll(@Query() filterDto: RentalFilterDto, @Req() req: any) {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const result = await this.rentalService.findAll(filterDto, baseUrl);
     return {
       is_success: true,
       message: 'Rentals fetched successfully',
@@ -85,11 +86,13 @@ export class RentalController {
   @ApiOperation({ summary: 'Get my rentals' })
   async findMyRentals(
     @Query() filterDto: RentalFilterDto,
-    @Req() req: { user: { userId: number } },
+    @Req() req: any,
   ) {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     const result = await this.rentalService.findMyRentals(
       req.user.userId,
       filterDto,
+      baseUrl,
     );
     return {
       is_success: true,
@@ -103,8 +106,9 @@ export class RentalController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get rental by ID' })
   @ApiParam({ name: 'id', type: Number })
-  async findOne(@Param('id') id: number) {
-    const rental = await this.rentalService.findOne(+id);
+  async findOne(@Param('id') id: number, @Req() req: any) {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const rental = await this.rentalService.findOne(+id, baseUrl);
     return {
       is_success: true,
       message: 'Rental fetched successfully',
