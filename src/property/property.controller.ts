@@ -17,6 +17,7 @@ import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dtos/property.request.dto';
 import { GenericResponseDto } from './dtos/generic-response.dto';
 import { Property } from 'src/entities/property.entity';
+import { PendingProperty } from '../entities/pending-property.entity';
 import { UpdatePropertyDto } from './dtos/property.update.dto';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -410,7 +411,7 @@ export class PropertyController {
     @Body() dto: UpdatePropertyDto,
     @UploadedFiles() images: Express.Multer.File[],
     @Req() req: Request,
-  ): Promise<GenericResponseDto<Property>> {
+  ): Promise<GenericResponseDto<PendingProperty>> {
     const property = await this.propertyService.update(+id, dto, images);
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;

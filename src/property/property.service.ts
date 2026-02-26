@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -328,26 +329,36 @@ export class PropertyService {
     id: number,
     dto: UpdatePropertyDto,
     images?: Express.Multer.File[],
-  ): Promise<Property> {
-    const property = await this.propertyRepository.findOne({
+  ): Promise<PendingProperty> {
+    // Pending properties can be edited
+    const pending = await this.pendingPropertyRepository.findOne({
       where: { id },
     });
 
-    if (!property) {
-      throw new NotFoundException('Property not found');
+    if (pending) {
+      if (pending.status !== PendingPropertyStatus.PENDING) {
+        throw new BadRequestException(
+          `Property cannot be edited because its status is '${pending.status}'`,
+        );
+      }
+
+      let imageNames = pending.images || [];
+      if (images && images.length > 0) {
+        imageNames = [...imageNames, ...images.map((f) => f.filename)];
+      }
+
+      Object.assign(pending, dto);
+      pending.images = imageNames;
+      return this.pendingPropertyRepository.save(pending);
     }
 
-    let imageNames = property.images || [];
-
-    if (images && images.length > 0) {
-      const newImages = images.map((file) => file.filename);
-      imageNames = [...imageNames, ...newImages];
+    // Active (approved) properties cannot be edited
+    const approved = await this.propertyRepository.findOne({ where: { id } });
+    if (approved) {
+      throw new BadRequestException('Active properties cannot be edited');
     }
 
-    Object.assign(property, dto);
-    property.images = imageNames;
-
-    return this.propertyRepository.save(property);
+    throw new NotFoundException(`Property with id ${id} not found`);
   }
 
   async remove(id: number) {
